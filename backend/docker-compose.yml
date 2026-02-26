@@ -1,0 +1,31 @@
+name: "furniture"
+services:
+  furniture_db:
+    restart: no
+    image: postgres:latest
+    container_name: furniture_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: furniture
+    ports:
+      - "5432:5432"
+    command: -p 5432
+    volumes:
+      - postgres:/data/postgres
+
+  api:
+    restart: no
+    build: .
+    container_name: furniture_api
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8080
+      DB_HOST: furniture_db
+    ports:
+      - "8080:8080"
+    depends_on:
+      - furniture_db
+
+volumes:
+  postgres:
