@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Search, X, ChevronDown, ShoppingBag } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { useStore, type Order } from "@/lib/store";
@@ -32,11 +32,13 @@ function formatDate(iso: string) {
 
 export default function OrdersPage() {
   const orders = useStore((s) => s.orders);
+  const isBootstrapping = useStore((s) => s.isBootstrapping);
   const updateOrderStatus = useStore((s) => s.updateOrderStatus);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Order["status"] | "all">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   const filtered = orders.filter((o) => {
     const matchSearch =
@@ -157,9 +159,8 @@ export default function OrdersPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map((order) => (
-                  <>
+                  <Fragment key={order.id}>
                     <tr
-                      key={order.id}
                       className="hover:bg-muted/30 transition-colors cursor-pointer"
                       onClick={() =>
                         setExpandedId(expandedId === order.id ? null : order.id)
@@ -193,9 +194,15 @@ export default function OrdersPage() {
                       <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                         <select
                           value={order.status}
-                          onChange={(e) =>
-                            updateOrderStatus(order.id, e.target.value as Order["status"])
-                          }
+                          onChange={async (e) => {
+                            setUpdatingOrderId(order.id);
+                            await updateOrderStatus(
+                              order.id,
+                              e.target.value as Order["status"]
+                            );
+                            setUpdatingOrderId(null);
+                          }}
+                          disabled={updatingOrderId === order.id}
                           className={cn(
                             "text-xs font-medium px-2 py-1.5 rounded-full capitalize cursor-pointer focus:outline-none border-0 appearance-none",
                             statusColors[order.status]
@@ -222,7 +229,7 @@ export default function OrdersPage() {
                     </tr>
 
                     {expandedId === order.id && (
-                      <tr key={`${order.id}-expanded`} className="bg-secondary">
+                      <tr className="bg-secondary">
                         <td colSpan={6} className="px-5 py-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Items */}
@@ -284,7 +291,7 @@ export default function OrdersPage() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -292,7 +299,11 @@ export default function OrdersPage() {
             {filtered.length === 0 && (
               <div className="text-center py-16 text-muted-foreground">
                 <ShoppingBag className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p>No orders found matching your criteria.</p>
+                <p>
+                  {isBootstrapping
+                    ? "Loading orders..."
+                    : "No orders found matching your criteria."}
+                </p>
               </div>
             )}
           </div>

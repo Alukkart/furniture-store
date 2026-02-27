@@ -1,10 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Star, Truck, RotateCcw, Shield } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
-import { PRODUCTS } from "@/lib/data";
+import { useStore } from "@/lib/store";
 
 const categories = [
   {
@@ -56,9 +58,11 @@ const perks = [
   },
 ];
 
-const featuredProducts = PRODUCTS.filter((p) => p.featured);
-
 export default function HomePage() {
+  const products = useStore((s) => s.products);
+  const isBootstrapping = useStore((s) => s.isBootstrapping);
+  const featuredProducts = products.filter((p) => p.featured);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -201,9 +205,15 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+              {isBootstrapping && featuredProducts.length === 0 ? (
+                <p className="col-span-full text-sm text-muted-foreground">
+                  Loading products...
+                </p>
+              ) : (
+                featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              )}
             </div>
           </div>
         </section>

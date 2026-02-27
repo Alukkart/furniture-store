@@ -9,7 +9,6 @@ import {
   Save,
   Package,
   AlertTriangle,
-  Plus,
 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { useStore, type Product } from "@/lib/store";
@@ -37,11 +36,13 @@ function StockBadge({ stock }: { stock: number }) {
 
 export default function InventoryPage() {
   const products = useStore((s) => s.products);
+  const isBootstrapping = useStore((s) => s.isBootstrapping);
   const updateProduct = useStore((s) => s.updateProduct);
 
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Product>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const filtered = products.filter(
     (p) =>
@@ -60,11 +61,13 @@ export default function InventoryPage() {
     setEditForm({});
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingId && editForm) {
       const original = products.find((p) => p.id === editingId);
       if (original) {
-        updateProduct({ ...original, ...editForm } as Product);
+        setIsSaving(true);
+        await updateProduct({ ...original, ...editForm } as Product);
+        setIsSaving(false);
       }
     }
     setEditingId(null);
@@ -259,9 +262,10 @@ export default function InventoryPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={saveEdit}
+                              disabled={isSaving}
                               className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded hover:opacity-90 transition-opacity"
                             >
-                              <Save className="w-3.5 h-3.5" /> Save
+                              <Save className="w-3.5 h-3.5" /> {isSaving ? "Saving..." : "Save"}
                             </button>
                             <button
                               onClick={cancelEdit}
@@ -288,7 +292,11 @@ export default function InventoryPage() {
             {filtered.length === 0 && (
               <div className="text-center py-16 text-muted-foreground">
                 <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p>No products found matching your search.</p>
+                <p>
+                  {isBootstrapping
+                    ? "Loading products..."
+                    : "No products found matching your search."}
+                </p>
               </div>
             )}
           </div>

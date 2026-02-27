@@ -3,8 +3,16 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle, Package, Minus, Plus, X, CreditCard, MapPin, User } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle,
+  Package,
+  Minus,
+  Plus,
+  X,
+  CreditCard,
+  MapPin,
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useStore } from "@/lib/store";
@@ -20,6 +28,7 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState<Step>("cart");
   const [orderId, setOrderId] = useState("");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const [shipping, setShipping] = useState({
     firstName: "",
@@ -38,14 +47,18 @@ export default function CheckoutPage() {
   const tax = Math.round(subtotal * 0.08);
   const total = subtotal + shippingCost + tax;
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
+    if (isPlacingOrder) return;
+    setIsPlacingOrder(true);
+
     const fullName = `${shipping.firstName} ${shipping.lastName}`;
     const address = `${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}`;
-    const order = placeOrder(fullName, shipping.email, address);
+    const order = await placeOrder(fullName, shipping.email, address);
     if (order) {
       setOrderId(order.id);
       setStep("confirmation");
     }
+    setIsPlacingOrder(false);
   };
 
   const STEPS = [
@@ -375,9 +388,12 @@ export default function CheckoutPage() {
                     </button>
                     <button
                       onClick={handlePlaceOrder}
-                      className="flex-1 bg-accent text-accent-foreground py-3.5 rounded font-semibold hover:opacity-90 transition-opacity"
+                      disabled={isPlacingOrder || cart.length === 0}
+                      className="flex-1 bg-accent text-accent-foreground py-3.5 rounded font-semibold hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      Place Order — ${total.toLocaleString()}
+                      {isPlacingOrder
+                        ? "Placing order..."
+                        : `Place Order — $${total.toLocaleString()}`}
                     </button>
                   </div>
                 </div>

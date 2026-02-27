@@ -6,7 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
@@ -17,7 +16,6 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
   const { login, loginError, currentUser } = useAuth();
-  const addAuditLog = useStore((s) => s.addAuditLog);
   const router = useRouter();
 
   // Already logged in — redirect straight to admin
@@ -45,28 +43,10 @@ export default function LoginPage() {
     setFieldErrors({});
     setIsLoading(true);
 
-    // Simulate network latency
-    await new Promise((r) => setTimeout(r, 700));
-
-    const success = login(email, password);
+    const success = await login(email, password);
 
     if (success) {
-      addAuditLog({
-        action: "User Login",
-        category: "user",
-        user: email,
-        details: `Successful admin login for ${email}`,
-        severity: "info",
-      });
       router.push("/admin");
-    } else {
-      addAuditLog({
-        action: "Failed Login Attempt",
-        category: "user",
-        user: email,
-        details: `Failed login attempt for ${email}`,
-        severity: "warning",
-      });
     }
 
     setIsLoading(false);

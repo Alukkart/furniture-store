@@ -4,7 +4,7 @@ import { use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, Star, Minus, Plus, ShoppingCart, Package, RotateCcw, Shield } from "lucide-react";
+import { Star, Minus, Plus, ShoppingCart, Package, RotateCcw, Shield } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -16,11 +16,24 @@ type Props = { params: Promise<{ id: string }> };
 export default function ProductPage({ params }: Props) {
   const { id } = use(params);
   const products = useStore((s) => s.products);
+  const isBootstrapping = useStore((s) => s.isBootstrapping);
   const addToCart = useStore((s) => s.addToCart);
   const product = products.find((p) => p.id === id);
 
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+
+  if (isBootstrapping && products.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">Loading product...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -88,7 +101,7 @@ export default function ProductPage({ params }: Props) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14">
             {/* Image */}
-            <div className="relative aspect-[4/3] lg:aspect-square rounded-xl overflow-hidden bg-muted">
+            <div className="relative aspect-4/3 lg:aspect-square rounded-xl overflow-hidden bg-muted">
               <Image
                 src={product.image}
                 alt={product.name}
@@ -189,7 +202,7 @@ export default function ProductPage({ params }: Props) {
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="px-4 text-sm font-semibold min-w-[2.5rem] text-center text-foreground">
+                  <span className="px-4 text-sm font-semibold min-w-10 text-center text-foreground">
                     {qty}
                   </span>
                   <button

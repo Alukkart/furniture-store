@@ -42,6 +42,15 @@ func Connect(cfg config.Config) (*gorm.DB, error) {
 	if err := db.AutoMigrate(&models.Product{}); err != nil {
 		return nil, err
 	}
+	if err := db.AutoMigrate(&models.Order{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.AuditLog{}); err != nil {
+		return nil, err
+	}
+	if err := seed(db); err != nil {
+		return nil, err
+	}
 
 	return db, nil
 }

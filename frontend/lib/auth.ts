@@ -2,23 +2,16 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { AdminUser } from "./types";
+import { login as loginRequest } from "@/services/auth";
+import { getApiErrorMessage } from "@/services/http";
 
-export type AdminUser = {
-  email: string;
-  name: string;
-  role: "Administrator" | "Manager";
-};
-
-// Hardcoded demo credentials — in production these would be server-validated
-const ADMIN_ACCOUNTS: Array<AdminUser & { password: string }> = [
-  { email: "admin@maison.co", password: "admin123", name: "Admin", role: "Administrator" },
-  { email: "manager@maison.co", password: "manager123", name: "Manager", role: "Manager" },
-];
+export type { AdminUser };
 
 type AuthState = {
   currentUser: AdminUser | null;
   loginError: string | null;
-  login: (email: string, password: string) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 };
 
@@ -28,17 +21,17 @@ export const useAuth = create<AuthState>()(
       currentUser: null,
       loginError: null,
 
-      login: (email, password) => {
-        const account = ADMIN_ACCOUNTS.find(
-          (a) => a.email === email && a.password === password
-        );
-        if (account) {
-          const { password: _pw, ...user } = account;
+      login: async (email, password) => {
+        try {
+          const user = await loginRequest(email, password);
           set({ currentUser: user, loginError: null });
           return true;
+        } catch (error) {
+          set({
+            loginError: getApiErrorMessage(error, "Invalid email or password."),
+          });
+          return false;
         }
-        set({ loginError: "Invalid email or password." });
-        return false;
       },
 
       logout: () => set({ currentUser: null, loginError: null }),

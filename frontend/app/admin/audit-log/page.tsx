@@ -93,6 +93,7 @@ function getRelativeTime(date: Date): string {
 
 export default function AuditLogPage() {
   const auditLogs = useStore((s) => s.auditLogs);
+  const isBootstrapping = useStore((s) => s.isBootstrapping);
 
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState<AuditLog["severity"] | "all">("all");
@@ -233,7 +234,11 @@ export default function AuditLogPage() {
           {filtered.length === 0 ? (
             <div className="bg-card border border-border rounded-xl text-center py-16 text-muted-foreground">
               <ScrollText className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p>No log entries match your filters.</p>
+              <p>
+                {isBootstrapping
+                  ? "Loading log entries..."
+                  : "No log entries match your filters."}
+              </p>
             </div>
           ) : (
             filtered.map((log) => {

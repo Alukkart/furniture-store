@@ -33,6 +33,7 @@ function ShopContent() {
   const initialSale = searchParams.get("sale") === "true";
 
   const products = useStore((s) => s.products);
+  const isBootstrapping = useStore((s) => s.isBootstrapping);
   const [category, setCategory] = useState(initialCategory);
   const [sort, setSort] = useState("featured");
   const [saleOnly, setSaleOnly] = useState(initialSale);
@@ -180,7 +181,12 @@ function ShopContent() {
                 </select>
               </div>
 
-              {filtered.length === 0 ? (
+              {isBootstrapping && products.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <p className="font-serif text-2xl text-foreground">Loading products...</p>
+                  <p className="text-muted-foreground mt-2">Please wait.</p>
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <p className="font-serif text-2xl text-foreground">No products found</p>
                   <p className="text-muted-foreground mt-2">Try adjusting your filters.</p>
