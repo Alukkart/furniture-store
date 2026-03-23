@@ -2,6 +2,7 @@ export type Product = {
   id: string;
   name: string;
   category: string;
+  category_id?: number;
   price: number;
   originalPrice?: number;
   image: string;
@@ -10,6 +11,7 @@ export type Product = {
   material: string;
   stock: number;
   sku: string;
+  is_active?: boolean;
   featured: boolean;
   rating: number;
   reviews: number;
@@ -49,10 +51,33 @@ export type AuditLog = {
   details: string;
   timestamp: string;
   severity: AuditSeverity;
+  entity?: string;
+  entity_id?: string;
+  result?: string;
 };
 
+export type RoleName = "Administrator" | "Manager" | "Warehouse" | "Executive";
+
 export type AdminUser = {
+  id: string;
   email: string;
   name: string;
-  role: "Administrator" | "Manager";
+  role: RoleName;
+};
+
+export type ForecastRow = {
+  category_id: number;
+  category: string;
+  forecast_qty: number;
+  recommended_buy: number;
+  factors: string;
+  confidence: number;
+};
+
+export type ForecastResponse = {
+  trained_at: string;
+  mae: number;
+  rmse: number;
+  period_months: number;
+  rows: ForecastRow[];
 };

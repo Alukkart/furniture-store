@@ -24,11 +24,8 @@ func main() {
 		log.Fatalf("database connection failed: %v", err)
 	}
 
-	app := fiber.New(fiber.Config{
-		AppName: "furniture-store",
-	})
-
-	routes.Register(app, db)
+	app := fiber.New(fiber.Config{AppName: "furniture-store"})
+	routes.Register(app, db, cfg.AppSecret)
 
 	log.Printf("listening on %s", cfg.AppAddress())
 	if err := app.Listen(cfg.AppAddress()); err != nil {

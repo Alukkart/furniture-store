@@ -21,12 +21,16 @@ const (
 
 type AuditLog struct {
 	ID        string        `gorm:"primaryKey;size:64" json:"id"`
-	Action    string        `json:"action"`
-	Category  AuditCategory `json:"category"`
-	User      string        `json:"user"`
-	Details   string        `json:"details"`
-	Timestamp time.Time     `json:"timestamp"`
-	Severity  AuditSeverity `json:"severity"`
+	UserID    *string       `gorm:"size:64;index" json:"user_id,omitempty"`
+	Action    string        `gorm:"size:180;not null" json:"action"`
+	Category  AuditCategory `gorm:"size:40;not null" json:"category"`
+	User      string        `gorm:"size:180;not null" json:"user"`
+	Entity    string        `gorm:"size:80" json:"entity,omitempty"`
+	EntityID  string        `gorm:"size:64" json:"entity_id,omitempty"`
+	Details   string        `gorm:"type:text;not null" json:"details"`
+	Timestamp time.Time     `gorm:"index" json:"timestamp"`
+	Severity  AuditSeverity `gorm:"size:40;not null" json:"severity"`
+	Result    string        `gorm:"size:40;default:'ok'" json:"result"`
 	CreatedAt time.Time     `json:"created_at"`
 	UpdatedAt time.Time     `json:"updated_at"`
 }

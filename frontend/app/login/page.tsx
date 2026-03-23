@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
   const { login, loginError, currentUser } = useAuth();
+  const bootstrap = useStore((s) => s.bootstrap);
   const router = useRouter();
 
   // Already logged in — redirect straight to admin
@@ -46,6 +48,7 @@ export default function LoginPage() {
     const success = await login(email, password);
 
     if (success) {
+      await bootstrap(true);
       router.push("/admin");
     }
 
@@ -129,6 +132,8 @@ export default function LoginPage() {
             <div className="space-y-0.5 text-xs text-muted-foreground font-mono">
               <p>admin@maison.co / admin123</p>
               <p>manager@maison.co / manager123</p>
+              <p>warehouse@maison.co / warehouse123</p>
+              <p>executive@maison.co / executive123</p>
             </div>
           </div>
 

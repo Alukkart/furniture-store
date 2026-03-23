@@ -3,18 +3,27 @@ package handlers
 import (
 	"strings"
 
+	"backend/internal/middleware"
 	"backend/internal/models"
+	"backend/internal/repositories"
+	"backend/internal/services"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
 type AuthHandler struct {
-	db *gorm.DB
+	authService  *services.AuthService
+	auditService *services.AuditService
 }
 
-func NewAuthHandler(db *gorm.DB) *AuthHandler {
-	return &AuthHandler{db: db}
+func NewAuthHandler(db *gorm.DB, appSecret string) *AuthHandler {
+	userRepo := repositories.NewUserRepository(db)
+	auditRepo := repositories.NewAuditRepository(db)
+	return &AuthHandler{
+		authService:  services.NewAuthService(userRepo, appSecret),
+		auditService: services.NewAuditService(auditRepo),
+	}
 }
 
 type loginRequest struct {
@@ -22,32 +31,11 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-type loginResponse struct {
-	User models.AdminUser `json:"user"`
-}
-
-type adminAccount struct {
-	models.AdminUser
-	Password string
-}
-
-var demoAccounts = []adminAccount{
-	{
-		AdminUser: models.AdminUser{
-			Email: "admin@maison.co",
-			Name:  "Admin",
-			Role:  "Administrator",
-		},
-		Password: "admin123",
-	},
-	{
-		AdminUser: models.AdminUser{
-			Email: "manager@maison.co",
-			Name:  "Manager",
-			Role:  "Manager",
-		},
-		Password: "manager123",
-	},
+type registerRequest struct {
+	Email    string          `json:"email"`
+	Password string          `json:"password"`
+	Name     string          `json:"name"`
+	Role     models.RoleName `json:"role"`
 }
 
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
@@ -56,38 +44,39 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid json")
 	}
 
-	email := strings.TrimSpace(strings.ToLower(payload.Email))
-	password := payload.Password
-	if email == "" || password == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "email and password are required")
+	response, err := h.authService.Login(payload.Email, payload.Password)
+	if err != nil {
+		_ = h.createAudit("Failed Login Attempt", models.AuditCategoryUser, strings.TrimSpace(payload.Email), "Failed login attempt", models.AuditSeverityWarning, "user", "", "failed")
+		return fiber.NewError(fiber.StatusUnauthorized, err.Error())
 	}
 
-	var account *adminAccount
-	for i := range demoAccounts {
-		if strings.ToLower(demoAccounts[i].Email) == email && demoAccounts[i].Password == password {
-			account = &demoAccounts[i]
-			break
-		}
+	_ = h.createAudit("User Login", models.AuditCategoryUser, response.User.Email, "Successful login", models.AuditSeverityInfo, "user", response.User.ID, "ok")
+	return c.JSON(response)
+}
+
+func (h *AuthHandler) Register(c *fiber.Ctx) error {
+	var payload registerRequest
+	if err := c.BodyParser(&payload); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid json")
 	}
 
-	if account == nil {
-		_ = createAuditLog(h.db, models.AuditLog{
-			Action:   "Failed Login Attempt",
-			Category: models.AuditCategoryUser,
-			User:     email,
-			Details:  "Failed login attempt for " + email,
-			Severity: models.AuditSeverityWarning,
-		})
-		return fiber.NewError(fiber.StatusUnauthorized, "invalid email or password")
+	user, err := h.authService.CreateUser(payload.Email, payload.Password, payload.Name, payload.Role)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
+	_ = h.createAudit("User Created", models.AuditCategoryUser, user.Email, "User registered", models.AuditSeverityInfo, "user", user.ID, "ok")
+	return c.Status(fiber.StatusCreated).JSON(models.AdminUser{ID: user.ID, Email: user.Email, Name: user.Name, Role: user.Role.Name})
+}
 
-	_ = createAuditLog(h.db, models.AuditLog{
-		Action:   "User Login",
-		Category: models.AuditCategoryUser,
-		User:     account.Email,
-		Details:  "Successful admin login for " + account.Email,
-		Severity: models.AuditSeverityInfo,
-	})
+func (h *AuthHandler) Me(c *fiber.Ctx) error {
+	claims, ok := middleware.ClaimsFromCtx(c)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	return c.JSON(models.AdminUser{ID: claims.UserID, Email: claims.Email, Role: claims.Role, Name: claims.Email})
+}
 
-	return c.JSON(loginResponse{User: account.AdminUser})
+func (h *AuthHandler) createAudit(action string, category models.AuditCategory, user, details string, severity models.AuditSeverity, entity, entityID, result string) error {
+	_, err := h.auditService.Create(models.AuditLog{Action: action, Category: category, User: user, Details: details, Severity: severity, Entity: entity, EntityID: entityID, Result: result})
+	return err
 }
