@@ -1,0 +1,193 @@
+product_id,product_name,category,month,month_index,price,stock,featured,daily_demand
+p2,Aria Accent Chair,Living Room,-8,0,649.00,28.00,1,3.0696
+p4,Cloud Platform Bed,Bedroom,-8,0,1549.00,15.00,1,2.0991
+p1,Haven Sectional Sofa,Living Room,-8,0,2199.00,12.00,1,1.5153
+p5,Lattice Oak Bookshelf,Storage,-8,0,849.00,20.00,0,2.3924
+p8,Marrakesh Wool Rug,Rugs & Textiles,-8,0,479.00,18.00,0,2.7030
+p7,Soleil Brass Floor Lamp,Lighting,-8,0,349.00,42.00,0,3.0994
+p3,Strata Walnut Dining Table,Dining Room,-8,0,1899.00,8.00,1,1.6134
+p6,Studio Writing Desk,Home Office,-8,0,599.00,35.00,0,2.9146
+p2,Aria Accent Chair,Living Room,-7,1,649.00,28.00,1,3.1214
+p4,Cloud Platform Bed,Bedroom,-7,1,1549.00,15.00,1,2.1535
+p1,Haven Sectional Sofa,Living Room,-7,1,2199.00,12.00,1,1.5712
+p5,Lattice Oak Bookshelf,Storage,-7,1,849.00,20.00,0,2.4460
+p8,Marrakesh Wool Rug,Rugs & Textiles,-7,1,479.00,18.00,0,2.7558
+p7,Soleil Brass Floor Lamp,Lighting,-7,1,349.00,42.00,0,3.1511
+p3,Strata Walnut Dining Table,Dining Room,-7,1,1899.00,8.00,1,1.6690
+p6,Studio Writing Desk,Home Office,-7,1,599.00,35.00,0,2.9669
+p2,Aria Accent Chair,Living Room,-6,2,649.00,28.00,1,3.1493
+p4,Cloud Platform Bed,Bedroom,-6,2,1549.00,15.00,1,2.1913
+p1,Haven Sectional Sofa,Living Room,-6,2,2199.00,12.00,1,1.6151
+p5,Lattice Oak Bookshelf,Storage,-6,2,849.00,20.00,0,2.4808
+p8,Marrakesh Wool Rug,Rugs & Textiles,-6,2,479.00,18.00,0,2.7875
+p7,Soleil Brass Floor Lamp,Lighting,-6,2,349.00,42.00,0,3.1788
+p3,Strata Walnut Dining Table,Dining Room,-6,2,1899.00,8.00,1,1.7118
+p6,Studio Writing Desk,Home Office,-6,2,599.00,35.00,0,2.9964
+p2,Aria Accent Chair,Living Room,-5,3,649.00,28.00,1,3.1747
+p4,Cloud Platform Bed,Bedroom,-5,3,1549.00,15.00,1,2.2274
+p1,Haven Sectional Sofa,Living Room,-5,3,2199.00,12.00,1,1.6576
+p5,Lattice Oak Bookshelf,Storage,-5,3,849.00,20.00,0,2.5137
+p8,Marrakesh Wool Rug,Rugs & Textiles,-5,3,479.00,18.00,0,2.8169
+p7,Soleil Brass Floor Lamp,Lighting,-5,3,349.00,42.00,0,3.2037
+p3,Strata Walnut Dining Table,Dining Room,-5,3,1899.00,8.00,1,1.7533
+p6,Studio Writing Desk,Home Office,-5,3,599.00,35.00,0,3.0234
+p2,Aria Accent Chair,Living Room,-4,4,649.00,28.00,1,2.9801
+p4,Cloud Platform Bed,Bedroom,-4,4,1549.00,15.00,1,2.0374
+p1,Haven Sectional Sofa,Living Room,-4,4,2199.00,12.00,1,1.4703
+p5,Lattice Oak Bookshelf,Storage,-4,4,849.00,20.00,0,2.3223
+p8,Marrakesh Wool Rug,Rugs & Textiles,-4,4,479.00,18.00,0,2.6240
+p7,Soleil Brass Floor Lamp,Lighting,-4,4,349.00,42.00,0,3.0090
+p3,Strata Walnut Dining Table,Dining Room,-4,4,1899.00,8.00,1,1.5655
+p6,Studio Writing Desk,Home Office,-4,4,599.00,35.00,0,2.8296
+p2,Aria Accent Chair,Living Room,-3,5,649.00,28.00,1,3.0636
+p4,Cloud Platform Bed,Bedroom,-3,5,1549.00,15.00,1,2.1136
+p1,Haven Sectional Sofa,Living Room,-3,5,2199.00,12.00,1,1.5421
+p5,Lattice Oak Bookshelf,Storage,-3,5,849.00,20.00,0,2.4006
+p8,Marrakesh Wool Rug,Rugs & Textiles,-3,5,479.00,18.00,0,2.7047
+p7,Soleil Brass Floor Lamp,Lighting,-3,5,349.00,42.00,0,3.0927
+p3,Strata Walnut Dining Table,Dining Room,-3,5,1899.00,8.00,1,1.6381
+p6,Studio Writing Desk,Home Office,-3,5,599.00,35.00,0,2.9119
+p2,Aria Accent Chair,Living Room,-2,6,649.00,28.00,1,3.1932
+p4,Cloud Platform Bed,Bedroom,-2,6,1549.00,15.00,1,2.2216
+p1,Haven Sectional Sofa,Living Room,-2,6,2199.00,12.00,1,1.6371
+p5,Lattice Oak Bookshelf,Storage,-2,6,849.00,20.00,0,2.5152
+p8,Marrakesh Wool Rug,Rugs & Textiles,-2,6,479.00,18.00,0,2.8262
+p7,Soleil Brass Floor Lamp,Lighting,-2,6,349.00,42.00,0,3.2230
+p3,Strata Walnut Dining Table,Dining Room,-2,6,1899.00,8.00,1,1.7353
+p6,Studio Writing Desk,Home Office,-2,6,599.00,35.00,0,3.0380
+p2,Aria Accent Chair,Living Room,-1,7,649.00,28.00,1,3.3646
+p4,Cloud Platform Bed,Bedroom,-1,7,1549.00,15.00,1,2.3584
+p1,Haven Sectional Sofa,Living Room,-1,7,2199.00,12.00,1,1.7532
+p5,Lattice Oak Bookshelf,Storage,-1,7,849.00,20.00,0,2.6625
+p8,Marrakesh Wool Rug,Rugs & Textiles,-1,7,479.00,18.00,0,2.9846
+p7,Soleil Brass Floor Lamp,Lighting,-1,7,349.00,42.00,0,3.3955
+p3,Strata Walnut Dining Table,Dining Room,-1,7,1899.00,8.00,1,1.8548
+p6,Studio Writing Desk,Home Office,-1,7,599.00,35.00,0,3.2039
+p2,Aria Accent Chair,Living Room,0,8,649.00,28.00,1,3.3220
+p4,Cloud Platform Bed,Bedroom,0,8,1549.00,15.00,1,2.2733
+p1,Haven Sectional Sofa,Living Room,0,8,2199.00,12.00,1,1.6424
+p5,Lattice Oak Bookshelf,Storage,0,8,849.00,20.00,0,2.5902
+p8,Marrakesh Wool Rug,Rugs & Textiles,0,8,479.00,18.00,0,2.9259
+p7,Soleil Brass Floor Lamp,Lighting,0,8,349.00,42.00,0,3.3542
+p3,Strata Walnut Dining Table,Dining Room,0,8,1899.00,8.00,1,1.7483
+p6,Studio Writing Desk,Home Office,0,8,599.00,35.00,0,3.1545
+p2,Aria Accent Chair,Living Room,1,9,649.00,28.00,1,4.3067
+p4,Cloud Platform Bed,Bedroom,1,9,1549.00,15.00,1,2.4299
+p1,Haven Sectional Sofa,Living Room,1,9,2199.00,12.00,1,2.1679
+p5,Lattice Oak Bookshelf,Storage,1,9,849.00,20.00,0,3.2604
+p8,Marrakesh Wool Rug,Rugs & Textiles,1,9,479.00,18.00,0,3.1095
+p7,Soleil Brass Floor Lamp,Lighting,1,9,349.00,42.00,0,3.5556
+p3,Strata Walnut Dining Table,Dining Room,1,9,1899.00,8.00,1,1.8832
+p6,Studio Writing Desk,Home Office,1,9,599.00,35.00,0,3.9547
+p2,Aria Accent Chair,Living Room,2,10,649.00,28.00,1,3.6999
+p4,Cloud Platform Bed,Bedroom,2,10,1549.00,15.00,1,2.5711
+p1,Haven Sectional Sofa,Living Room,2,10,2199.00,12.00,1,1.8922
+p5,Lattice Oak Bookshelf,Storage,2,10,849.00,20.00,0,3.2507
+p8,Marrakesh Wool Rug,Rugs & Textiles,2,10,479.00,18.00,0,3.2735
+p7,Soleil Brass Floor Lamp,Lighting,2,10,349.00,42.00,0,3.7345
+p3,Strata Walnut Dining Table,Dining Room,2,10,1899.00,8.00,1,2.0062
+p6,Studio Writing Desk,Home Office,2,10,599.00,35.00,0,3.5196
+p2,Aria Accent Chair,Living Room,3,11,649.00,28.00,1,3.8360
+p4,Cloud Platform Bed,Bedroom,3,11,1549.00,15.00,1,2.6837
+p1,Haven Sectional Sofa,Living Room,3,11,2199.00,12.00,1,1.9905
+p5,Lattice Oak Bookshelf,Storage,3,11,849.00,20.00,0,3.0319
+p8,Marrakesh Wool Rug,Rugs & Textiles,3,11,479.00,18.00,0,3.4008
+p7,Soleil Brass Floor Lamp,Lighting,3,11,349.00,42.00,0,3.8714
+p3,Strata Walnut Dining Table,Dining Room,3,11,1899.00,8.00,1,2.1069
+p6,Studio Writing Desk,Home Office,3,11,599.00,35.00,0,3.6520
+p2,Aria Accent Chair,Living Room,4,12,649.00,28.00,1,3.6819
+p4,Cloud Platform Bed,Bedroom,4,12,1549.00,15.00,1,2.5216
+p1,Haven Sectional Sofa,Living Room,4,12,2199.00,12.00,1,1.8235
+p5,Lattice Oak Bookshelf,Storage,4,12,849.00,20.00,0,2.8722
+p8,Marrakesh Wool Rug,Rugs & Textiles,4,12,479.00,18.00,0,3.2436
+p7,Soleil Brass Floor Lamp,Lighting,4,12,349.00,42.00,0,3.7175
+p3,Strata Walnut Dining Table,Dining Room,4,12,1899.00,8.00,1,1.9408
+p6,Studio Writing Desk,Home Office,4,12,599.00,35.00,0,3.4966
+p2,Aria Accent Chair,Living Room,5,13,649.00,28.00,1,3.7223
+p4,Cloud Platform Bed,Bedroom,5,13,1549.00,15.00,1,2.5681
+p1,Haven Sectional Sofa,Living Room,5,13,2199.00,12.00,1,1.8737
+p5,Lattice Oak Bookshelf,Storage,5,13,849.00,20.00,0,2.9169
+p8,Marrakesh Wool Rug,Rugs & Textiles,5,13,479.00,18.00,0,3.2864
+p7,Soleil Brass Floor Lamp,Lighting,5,13,349.00,42.00,0,3.7578
+p3,Strata Walnut Dining Table,Dining Room,5,13,1899.00,8.00,1,1.9903
+p6,Studio Writing Desk,Home Office,5,13,599.00,35.00,0,3.5380
+p2,Aria Accent Chair,Living Room,6,14,649.00,28.00,1,3.7347
+p4,Cloud Platform Bed,Bedroom,6,14,1549.00,15.00,1,2.5952
+p1,Haven Sectional Sofa,Living Room,6,14,2199.00,12.00,1,1.9097
+p5,Lattice Oak Bookshelf,Storage,6,14,849.00,20.00,0,2.9395
+p8,Marrakesh Wool Rug,Rugs & Textiles,6,14,479.00,18.00,0,3.3043
+p7,Soleil Brass Floor Lamp,Lighting,6,14,349.00,42.00,0,3.7697
+p3,Strata Walnut Dining Table,Dining Room,6,14,1899.00,8.00,1,2.0248
+p6,Studio Writing Desk,Home Office,6,14,599.00,35.00,0,3.5527
+p2,Aria Accent Chair,Living Room,7,15,649.00,28.00,1,3.7444
+p4,Cloud Platform Bed,Bedroom,7,15,1549.00,15.00,1,2.6205
+p1,Haven Sectional Sofa,Living Room,7,15,2199.00,12.00,1,1.9444
+p5,Lattice Oak Bookshelf,Storage,7,15,849.00,20.00,0,2.9602
+p8,Marrakesh Wool Rug,Rugs & Textiles,7,15,479.00,18.00,0,3.3199
+p7,Soleil Brass Floor Lamp,Lighting,7,15,349.00,42.00,0,3.7789
+p3,Strata Walnut Dining Table,Dining Room,7,15,1899.00,8.00,1,2.0579
+p6,Studio Writing Desk,Home Office,7,15,599.00,35.00,0,3.5650
+p2,Aria Accent Chair,Living Room,8,16,649.00,28.00,1,3.5385
+p4,Cloud Platform Bed,Bedroom,8,16,1549.00,15.00,1,3.4284
+p1,Haven Sectional Sofa,Living Room,8,16,2199.00,12.00,1,1.7513
+p5,Lattice Oak Bookshelf,Storage,8,16,849.00,20.00,0,3.3362
+p8,Marrakesh Wool Rug,Rugs & Textiles,8,16,479.00,18.00,0,3.1170
+p7,Soleil Brass Floor Lamp,Lighting,8,16,349.00,42.00,0,3.5727
+p3,Strata Walnut Dining Table,Dining Room,8,16,1899.00,8.00,1,1.8641
+p6,Studio Writing Desk,Home Office,8,16,599.00,35.00,0,4.3646
+p2,Aria Accent Chair,Living Room,9,17,649.00,28.00,1,3.6178
+p4,Cloud Platform Bed,Bedroom,9,17,1549.00,15.00,1,3.3092
+p1,Haven Sectional Sofa,Living Room,9,17,2199.00,12.00,1,1.8211
+p5,Lattice Oak Bookshelf,Storage,9,17,849.00,20.00,0,2.8349
+p8,Marrakesh Wool Rug,Rugs & Textiles,9,17,479.00,18.00,0,4.0912
+p7,Soleil Brass Floor Lamp,Lighting,9,17,349.00,42.00,0,3.6522
+p3,Strata Walnut Dining Table,Dining Room,9,17,1899.00,8.00,1,1.9344
+p6,Studio Writing Desk,Home Office,9,17,599.00,35.00,0,4.7136
+p2,Aria Accent Chair,Living Room,10,18,649.00,28.00,1,3.7515
+p4,Cloud Platform Bed,Bedroom,10,18,1549.00,15.00,1,2.6068
+p1,Haven Sectional Sofa,Living Room,10,18,2199.00,12.00,1,1.9182
+p5,Lattice Oak Bookshelf,Storage,10,18,849.00,20.00,0,2.9527
+p8,Marrakesh Wool Rug,Rugs & Textiles,10,18,479.00,18.00,0,4.4215
+p7,Soleil Brass Floor Lamp,Lighting,10,18,349.00,42.00,0,4.9641
+p3,Strata Walnut Dining Table,Dining Room,10,18,1899.00,8.00,1,2.0338
+p6,Studio Writing Desk,Home Office,10,18,599.00,35.00,0,3.5687
+p2,Aria Accent Chair,Living Room,11,19,649.00,28.00,1,5.4559
+p4,Cloud Platform Bed,Bedroom,11,19,1549.00,15.00,1,2.7515
+p1,Haven Sectional Sofa,Living Room,11,19,2199.00,12.00,1,2.8059
+p5,Lattice Oak Bookshelf,Storage,11,19,849.00,20.00,0,3.1090
+p8,Marrakesh Wool Rug,Rugs & Textiles,11,19,479.00,18.00,0,4.3893
+p7,Soleil Brass Floor Lamp,Lighting,11,19,349.00,42.00,0,5.2542
+p3,Strata Walnut Dining Table,Dining Room,11,19,1899.00,8.00,1,2.8839
+p6,Studio Writing Desk,Home Office,11,19,599.00,35.00,0,3.7455
+p2,Aria Accent Chair,Living Room,12,20,649.00,28.00,1,5.5956
+p4,Cloud Platform Bed,Bedroom,12,20,1549.00,15.00,1,2.6771
+p1,Haven Sectional Sofa,Living Room,12,20,2199.00,12.00,1,2.7868
+p5,Lattice Oak Bookshelf,Storage,12,20,849.00,20.00,0,3.0489
+p8,Marrakesh Wool Rug,Rugs & Textiles,12,20,479.00,18.00,0,3.4427
+p7,Soleil Brass Floor Lamp,Lighting,12,20,349.00,42.00,0,5.2660
+p3,Strata Walnut Dining Table,Dining Room,12,20,1899.00,8.00,1,2.8737
+p6,Studio Writing Desk,Home Office,12,20,599.00,35.00,0,3.7109
+p2,Aria Accent Chair,Living Room,1,21,649.00,28.00,1,5.0415
+p4,Cloud Platform Bed,Bedroom,1,21,1549.00,15.00,1,2.8444
+p1,Haven Sectional Sofa,Living Room,1,21,2199.00,12.00,1,2.5377
+p5,Lattice Oak Bookshelf,Storage,1,21,849.00,20.00,0,3.8167
+p8,Marrakesh Wool Rug,Rugs & Textiles,1,21,479.00,18.00,0,3.6400
+p7,Soleil Brass Floor Lamp,Lighting,1,21,349.00,42.00,0,4.1622
+p3,Strata Walnut Dining Table,Dining Room,1,21,1899.00,8.00,1,2.2045
+p6,Studio Writing Desk,Home Office,1,21,599.00,35.00,0,4.6295
+p2,Aria Accent Chair,Living Room,2,22,649.00,28.00,1,4.3122
+p4,Cloud Platform Bed,Bedroom,2,22,1549.00,15.00,1,2.9936
+p1,Haven Sectional Sofa,Living Room,2,22,2199.00,12.00,1,2.2004
+p5,Lattice Oak Bookshelf,Storage,2,22,849.00,20.00,0,3.7875
+p8,Marrakesh Wool Rug,Rugs & Textiles,2,22,479.00,18.00,0,3.8141
+p7,Soleil Brass Floor Lamp,Lighting,2,22,349.00,42.00,0,4.3527
+p3,Strata Walnut Dining Table,Dining Room,2,22,1899.00,8.00,1,2.3336
+p6,Studio Writing Desk,Home Office,2,22,599.00,35.00,0,4.1016
+p2,Aria Accent Chair,Living Room,3,23,649.00,28.00,1,4.4525
+p4,Cloud Platform Bed,Bedroom,3,23,1549.00,15.00,1,3.1090
+p1,Haven Sectional Sofa,Living Room,3,23,2199.00,12.00,1,2.3008
+p5,Lattice Oak Bookshelf,Storage,3,23,849.00,20.00,0,3.5150
+p8,Marrakesh Wool Rug,Rugs & Textiles,3,23,479.00,18.00,0,3.9451
+p7,Soleil Brass Floor Lamp,Lighting,3,23,349.00,42.00,0,4.4938
+p3,Strata Walnut Dining Table,Dining Room,3,23,1899.00,8.00,1,2.4365
+p6,Studio Writing Desk,Home Office,3,23,599.00,35.00,0,4.2380

@@ -1,0 +1,230 @@
+"use client";
+
+import { useState } from "react";
+import type { Order, Product } from "@/lib/types";
+
+const STATUS_OPTIONS: Order["status"][] = [
+  "pending",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+];
+
+type Props = {
+  initialOrder: Order;
+  products: Product[];
+  submitLabel: string;
+  isSubmitting?: boolean;
+  onSubmit: (order: Order) => Promise<void>;
+};
+
+export default function OrderForm({ initialOrder, products, submitLabel, isSubmitting, onSubmit }: Props) {
+  const [order, setOrder] = useState<Order>(initialOrder);
+  const [error, setError] = useState<string | null>(null);
+
+  function updateItem(index: number, updates: Partial<Order["items"][number]>) {
+    setOrder((current) => ({
+      ...current,
+      items: current.items.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, ...updates } : item
+      ),
+    }));
+  }
+
+  function changeItemProduct(index: number, productId: string) {
+    const product = products.find((entry) => entry.id === productId);
+    if (!product) return;
+    updateItem(index, { product });
+  }
+
+  function addItem() {
+    if (products.length === 0) return;
+    setOrder((current) => ({
+      ...current,
+      items: [...current.items, { product: products[0], quantity: 1 }],
+    }));
+  }
+
+  function removeItem(index: number) {
+    setOrder((current) => ({
+      ...current,
+      items: current.items.filter((_, itemIndex) => itemIndex !== index),
+    }));
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+
+    if (!order.customer.trim() || !order.email.trim() || !order.address.trim()) {
+      setError("Customer, email, and address are required.");
+      return;
+    }
+    if (order.items.length === 0) {
+      setError("Add at least one line item.");
+      return;
+    }
+    if (order.items.some((item) => item.quantity <= 0)) {
+      setError("Each item quantity must be greater than zero.");
+      return;
+    }
+
+    await onSubmit(order);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+
+      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="font-semibold text-foreground">Order Details</h2>
+          <div className="mt-4 space-y-4">
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-foreground">Order ID</span>
+              <input value={order.id} disabled className="w-full rounded-lg border border-input bg-muted px-3 py-2 text-sm text-muted-foreground" />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-foreground">Customer</span>
+              <input
+                value={order.customer}
+                onChange={(e) => setOrder((current) => ({ ...current, customer: e.target.value }))}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-foreground">Email</span>
+              <input
+                type="email"
+                value={order.email}
+                onChange={(e) => setOrder((current) => ({ ...current, email: e.target.value }))}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-foreground">Address</span>
+              <textarea
+                value={order.address}
+                onChange={(e) => setOrder((current) => ({ ...current, address: e.target.value }))}
+                rows={4}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-foreground">Date</span>
+              <input
+                type="datetime-local"
+                value={order.date.slice(0, 16)}
+                onChange={(e) =>
+                  setOrder((current) => ({
+                    ...current,
+                    date: new Date(e.target.value).toISOString(),
+                  }))
+                }
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-foreground">Status</span>
+              <select
+                value={order.status}
+                onChange={(e) => setOrder((current) => ({ ...current, status: e.target.value as Order["status"] }))}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+              >
+                {STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="font-semibold text-foreground">Items</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Adjust products and quantities for this order.</p>
+            </div>
+            <button
+              type="button"
+              onClick={addItem}
+              className="rounded-lg border border-border px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+            >
+              Add item
+            </button>
+          </div>
+
+          <div className="mt-4 space-y-4">
+            {order.items.map((item, index) => (
+              <div key={`${item.product.id}-${index}`} className="rounded-lg border border-border p-4">
+                <div className="grid gap-4 md:grid-cols-[1fr_120px_auto]">
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium text-foreground">Product</span>
+                    <select
+                      value={item.product.id}
+                      onChange={(e) => changeItemProduct(index, e.target.value)}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+                    >
+                      {products.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium text-foreground">Qty</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, { quantity: Number(e.target.value) })}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+                    />
+                  </label>
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={() => removeItem(index)}
+                      className="rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Line total: ${(item.product.price * item.quantity).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 border-t border-border pt-4">
+            <p className="text-sm text-muted-foreground">
+              Order total
+              <span className="ml-2 font-semibold text-foreground">
+                $
+                {order.items
+                  .reduce((total, item) => total + item.product.price * item.quantity, 0)
+                  .toLocaleString()}
+              </span>
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isSubmitting ? "Saving..." : submitLabel}
+        </button>
+      </div>
+    </form>
+  );
+}
