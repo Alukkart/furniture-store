@@ -9,6 +9,8 @@ type Config struct {
 	AppHost string
 	AppPort string
 
+	AppSecret string
+
 	DBHost     string
 	DBPort     string
 	DBUser     string
@@ -22,13 +24,14 @@ func Load() Config {
 		AppHost: getenv("APP_HOST", "0.0.0.0"),
 		AppPort: getenv("APP_PORT", "8080"),
 
+		AppSecret: getenv("APP_SECRET", "dev-secret-change-me"),
+
 		DBHost:     getenv("DB_HOST", "localhost"),
 		DBPort:     getenv("DB_PORT", "5432"),
 		DBUser:     getenv("DB_USER", "user"),
 		DBPassword: getenv("DB_PASSWORD", "root"),
-
-		DBName:    getenv("DB_NAME", "furniture"),
-		DBSSLMode: getenv("DB_SSLMODE", "disable"),
+		DBName:     getenv("DB_NAME", "furniture"),
+		DBSSLMode:  getenv("DB_SSLMODE", "disable"),
 	}
 }
 

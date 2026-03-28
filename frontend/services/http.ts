@@ -8,6 +8,25 @@ export const api = axios.create({
   timeout: 15000,
 });
 
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const raw = window.localStorage.getItem("maison-auth");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as { state?: { token?: string } };
+        const token = parsed?.state?.token;
+        if (token) {
+          config.headers = config.headers ?? {};
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch {
+        // no-op
+      }
+    }
+  }
+  return config;
+});
+
 export function getApiErrorMessage(error: unknown, fallback = "Request failed") {
   if (axios.isAxiosError(error)) {
     const payload = error.response?.data;

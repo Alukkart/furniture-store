@@ -27,6 +27,7 @@ services:
     environment:
       APP_HOST: 0.0.0.0
       APP_PORT: 8080
+      APP_SECRET: dev-secret-change-me
       DB_HOST: furniture_db
     ports:
       - "8080:8080"

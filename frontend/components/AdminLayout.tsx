@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -11,17 +11,19 @@ import {
   ChevronRight,
   ArrowLeft,
   LogOut,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useStore } from "@/lib/store";
 
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/inventory", label: "Inventory", icon: Package },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
-  { href: "/admin/audit-log", label: "Audit Log", icon: ScrollText },
-];
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, roles: ["Administrator", "Manager", "Warehouse", "Executive"] },
+  { href: "/admin/inventory", label: "Inventory", icon: Package, roles: ["Administrator", "Manager", "Warehouse"] },
+  { href: "/admin/orders", label: "Orders", icon: ShoppingBag, roles: ["Administrator", "Manager", "Warehouse", "Executive"] },
+  { href: "/admin/forecast", label: "Forecast", icon: TrendingUp, roles: ["Administrator", "Manager", "Executive"] },
+  { href: "/admin/audit-log", label: "Audit Log", icon: ScrollText, roles: ["Administrator", "Manager", "Warehouse", "Executive"] },
+] as const;
 
 type Props = {
   children: React.ReactNode;
@@ -33,11 +35,21 @@ export default function AdminLayout({ children }: Props) {
   const { currentUser, logout } = useAuth();
   const addAuditLog = useStore((s) => s.addAuditLog);
 
+  const visibleNav = useMemo(() => {
+    if (!currentUser) return [];
+    return navItems.filter((item) => item.roles.includes(currentUser.role));
+  }, [currentUser]);
+
   useEffect(() => {
     if (!currentUser) {
       router.replace("/login");
+      return;
     }
-  }, [currentUser, router]);
+    const allowed = navItems.some((item) => pathname.startsWith(item.href) && item.roles.includes(currentUser.role));
+    if (!allowed && pathname !== "/admin") {
+      router.replace("/admin");
+    }
+  }, [currentUser, pathname, router]);
 
   if (!currentUser) return null;
 
@@ -45,9 +57,10 @@ export default function AdminLayout({ children }: Props) {
     addAuditLog({
       action: "User Logout",
       category: "user",
-      user: currentUser!.email,
-      details: `${currentUser!.name} (${currentUser!.email}) signed out`,
+      user: currentUser.email,
+      details: `${currentUser.name} (${currentUser.email}) signed out`,
       severity: "info",
+      result: "ok",
     });
     logout();
     router.push("/login");
@@ -55,26 +68,21 @@ export default function AdminLayout({ children }: Props) {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
       <aside className="w-16 md:w-60 flex-shrink-0 bg-sidebar flex flex-col min-h-screen sticky top-0 h-screen">
-        {/* Logo */}
         <div className="px-4 py-5 border-b border-sidebar-border">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-sidebar-primary rounded flex items-center justify-center flex-shrink-0">
               <span className="text-sidebar-primary-foreground font-serif font-bold text-sm">M</span>
             </div>
             <div className="hidden md:block">
-              <p className="font-serif font-bold text-sidebar-foreground text-sm leading-tight">
-                Maison & Co.
-              </p>
+              <p className="font-serif font-bold text-sidebar-foreground text-sm leading-tight">Maison & Co.</p>
               <p className="text-xs text-sidebar-foreground/50">Admin Panel</p>
             </div>
           </Link>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 px-2 py-4 space-y-1">
-          {navItems.map(({ href, label, icon: Icon }) => {
+          {visibleNav.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href;
             return (
               <Link
@@ -89,15 +97,12 @@ export default function AdminLayout({ children }: Props) {
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
                 <span className="hidden md:inline">{label}</span>
-                {isActive && (
-                  <ChevronRight className="w-3 h-3 ml-auto hidden md:block text-sidebar-primary" />
-                )}
+                {isActive && <ChevronRight className="w-3 h-3 ml-auto hidden md:block text-sidebar-primary" />}
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer */}
         <div className="px-3 py-4 border-t border-sidebar-border space-y-1">
           <Link
             href="/"
@@ -115,32 +120,24 @@ export default function AdminLayout({ children }: Props) {
           </button>
           <div className="hidden md:flex items-center gap-2 px-3 py-2 mt-1">
             <div className="w-7 h-7 rounded-full bg-sidebar-primary flex items-center justify-center flex-shrink-0">
-              <span className="text-xs text-sidebar-primary-foreground font-semibold">
-                {currentUser.name.charAt(0)}
-              </span>
+              <span className="text-xs text-sidebar-primary-foreground font-semibold">{currentUser.name.charAt(0)}</span>
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-sidebar-foreground truncate">
-                {currentUser.email}
-              </p>
+              <p className="text-xs font-medium text-sidebar-foreground truncate">{currentUser.email}</p>
               <p className="text-xs text-sidebar-foreground/40">{currentUser.role}</p>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        {/* Breadcrumb header */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-6 py-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Admin</span>
             {pathname !== "/admin" && (
               <>
                 <ChevronRight className="w-3 h-3" />
-                <span className="text-foreground font-medium capitalize">
-                  {pathname.replace("/admin/", "").replace("-", " ")}
-                </span>
+                <span className="text-foreground font-medium capitalize">{pathname.replace("/admin/", "").replace("-", " ")}</span>
               </>
             )}
           </div>

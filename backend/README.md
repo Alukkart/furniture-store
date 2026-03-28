@@ -1,47 +1,42 @@
 # Furniture Store Backend
 
-Каркас бекенда для магазина мебели на Go (Fiber + GORM + PostgreSQL) со Swagger UI.
+Backend for furniture store automation built on Go (`Fiber + GORM + PostgreSQL`).
 
-## Возможности
-- Fiber HTTP сервер
-- GORM для работы с PostgreSQL
+## Implemented
+- JWT-like signed token authentication (`/api/auth/login`)
+- Role-based authorization (Administrator / Manager / Warehouse / Executive)
+- Product CRUD with validation
+- Orders with stock control and status transitions
+- Customer/category/user reference APIs
+- Audit log API
+- AI demand forecasting (`/api/forecast`) with model training and persisted model file
 - Swagger UI (`/swagger/index.html`)
-- Dockerfile и docker-compose
 
-## Структура
-- `main.go` - точка входа
-- `internal/config` - конфигурация из переменных окружения
-- `internal/database` - подключение к БД и миграции
-- `internal/models` - модели
-- `internal/handlers` - обработчики HTTP
-- `internal/routes` - маршруты
-- `docs` - Swagger описание
+## Layers
+- MVC controllers: `internal/handlers`
+- Service layer: `internal/services`
+- Repository layer: `internal/repositories`
 
-## Переменные окружения
-- `APP_HOST` (по умолчанию `0.0.0.0`)
-- `APP_PORT` (по умолчанию `8080`)
-- `DB_HOST` (по умолчанию `localhost`)
-- `DB_PORT` (по умолчанию `5432`)
-- `DB_USER` (по умолчанию `postgres`)
-- `DB_PASSWORD` (по умолчанию `postgres`)
-- `DB_NAME` (по умолчанию `furniture`)
-- `DB_SSLMODE` (по умолчанию `disable`)
+## Environment Variables
+- `APP_HOST` (default `0.0.0.0`)
+- `APP_PORT` (default `8080`)
+- `APP_SECRET` (default `dev-secret-change-me`)
+- `DB_HOST` (default `localhost`)
+- `DB_PORT` (default `5432`)
+- `DB_USER` (default `user`)
+- `DB_PASSWORD` (default `root`)
+- `DB_NAME` (default `furniture`)
+- `DB_SSLMODE` (default `disable`)
 
-## Запуск локально
+## Demo Accounts
+- `admin@maison.co / admin123`
+- `manager@maison.co / manager123`
+- `warehouse@maison.co / warehouse123`
+- `executive@maison.co / executive123`
+
+## Run
 ```bash
-go mod tidy
 go run .
 ```
 
-## Запуск в Docker
-```bash
-docker compose up --build
-```
-
-## Swagger
-UI доступен по адресу:
-```
-http://localhost:8080/swagger/index.html
-```
-
-Для автогенерации описания можно использовать `swag init` (требует установки `swag`).
+Or with Docker Compose from project root.

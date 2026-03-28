@@ -39,13 +39,7 @@ func Connect(cfg config.Config) (*gorm.DB, error) {
 		return nil, fmt.Errorf("database ping failed: %w", err)
 	}
 
-	if err := db.AutoMigrate(&models.Product{}); err != nil {
-		return nil, err
-	}
-	if err := db.AutoMigrate(&models.Order{}); err != nil {
-		return nil, err
-	}
-	if err := db.AutoMigrate(&models.AuditLog{}); err != nil {
+	if err := autoMigrate(db); err != nil {
 		return nil, err
 	}
 	if err := seed(db); err != nil {
@@ -53,4 +47,19 @@ func Connect(cfg config.Config) (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+func autoMigrate(db *gorm.DB) error {
+	return db.AutoMigrate(
+		&models.Role{},
+		&models.User{},
+		&models.Category{},
+		&models.Product{},
+		&models.Customer{},
+		&models.OrderStatusRef{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.AuditLog{},
+		&models.MLDataset{},
+	)
 }

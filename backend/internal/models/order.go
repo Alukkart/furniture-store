@@ -1,19 +1,15 @@
 package models
 
-import (
-	"encoding/json"
-	"strings"
-	"time"
-)
+import "time"
 
-type OrderStatus string
+type OrderState string
 
 const (
-	OrderStatusPending    OrderStatus = "pending"
-	OrderStatusProcessing OrderStatus = "processing"
-	OrderStatusShipped    OrderStatus = "shipped"
-	OrderStatusDelivered  OrderStatus = "delivered"
-	OrderStatusCancelled  OrderStatus = "cancelled"
+	OrderStatusPending    OrderState = "pending"
+	OrderStatusProcessing OrderState = "processing"
+	OrderStatusShipped    OrderState = "shipped"
+	OrderStatusDelivered  OrderState = "delivered"
+	OrderStatusCancelled  OrderState = "cancelled"
 )
 
 type CartItem struct {
@@ -21,71 +17,43 @@ type CartItem struct {
 	Quantity int     `json:"quantity"`
 }
 
+type OrderItem struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	OrderID   string    `gorm:"size:64;index;not null" json:"order_id"`
+	Order     Order     `gorm:"foreignKey:OrderID" json:"-"`
+	ProductID string    `gorm:"size:64;index;not null" json:"product_id"`
+	Product   Product   `gorm:"foreignKey:ProductID" json:"product"`
+	Qty       int       `gorm:"not null" json:"qty"`
+	Price     int64     `gorm:"not null" json:"price"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type Order struct {
-	ID        string      `gorm:"primaryKey;size:64" json:"id"`
-	Customer  string      `json:"customer"`
-	Email     string      `json:"email"`
-	ItemsJSON string      `gorm:"type:text;column:items_json" json:"-"`
-	Total     int64       `json:"total"`
-	Status    OrderStatus `json:"status"`
-	Date      time.Time   `json:"date"`
-	Address   string      `json:"address"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
+	ID         string         `gorm:"primaryKey;size:64" json:"id"`
+	CustomerID string         `gorm:"size:64;index;not null" json:"customer_id"`
+	Customer   Customer       `gorm:"foreignKey:CustomerID" json:"-"`
+	StatusID   uint           `gorm:"index;not null" json:"status_id"`
+	StatusRef  OrderStatusRef `gorm:"foreignKey:StatusID" json:"-"`
+	TotalSum   int64          `gorm:"not null;default:0" json:"total_sum"`
+	Address    string         `gorm:"size:255;not null" json:"address"`
+	Items      []OrderItem    `gorm:"foreignKey:OrderID" json:"-"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at"`
 }
 
 type OrderResponse struct {
-	ID       string      `json:"id"`
-	Customer string      `json:"customer"`
-	Email    string      `json:"email"`
-	Items    []CartItem  `json:"items"`
-	Total    int64       `json:"total"`
-	Status   OrderStatus `json:"status"`
-	Date     time.Time   `json:"date"`
-	Address  string      `json:"address"`
+	ID       string     `json:"id"`
+	Customer string     `json:"customer"`
+	Email    string     `json:"email"`
+	Items    []CartItem `json:"items"`
+	Total    int64      `json:"total"`
+	Status   OrderState `json:"status"`
+	Date     time.Time  `json:"date"`
+	Address  string     `json:"address"`
 }
 
-func (o *Order) SetItems(items []CartItem) error {
-	payload, err := json.Marshal(items)
-	if err != nil {
-		return err
-	}
-	o.ItemsJSON = string(payload)
-	return nil
-}
-
-func (o *Order) Items() ([]CartItem, error) {
-	if strings.TrimSpace(o.ItemsJSON) == "" {
-		return []CartItem{}, nil
-	}
-
-	var items []CartItem
-	if err := json.Unmarshal([]byte(o.ItemsJSON), &items); err != nil {
-		return nil, err
-	}
-
-	return items, nil
-}
-
-func (o *Order) ToResponse() (OrderResponse, error) {
-	items, err := o.Items()
-	if err != nil {
-		return OrderResponse{}, err
-	}
-
-	return OrderResponse{
-		ID:       o.ID,
-		Customer: o.Customer,
-		Email:    o.Email,
-		Items:    items,
-		Total:    o.Total,
-		Status:   o.Status,
-		Date:     o.Date,
-		Address:  o.Address,
-	}, nil
-}
-
-func IsValidOrderStatus(status OrderStatus) bool {
+func IsValidOrderStatus(status OrderState) bool {
 	switch status {
 	case OrderStatusPending, OrderStatusProcessing, OrderStatusShipped, OrderStatusDelivered, OrderStatusCancelled:
 		return true
