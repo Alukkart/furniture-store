@@ -4,6 +4,8 @@ import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useStore } from "@/lib/store";
+import { usePreferences } from "@/lib/preferences";
+import { siteText, translateCategory } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 
@@ -16,6 +18,8 @@ export default function CartDrawer({ open, onClose }: Props) {
   const cart = useStore((s) => s.cart);
   const removeFromCart = useStore((s) => s.removeFromCart);
   const updateCartQuantity = useStore((s) => s.updateCartQuantity);
+  const locale = usePreferences((s) => s.locale);
+  const t = siteText[locale].cart;
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -48,23 +52,23 @@ export default function CartDrawer({ open, onClose }: Props) {
           open ? "translate-x-0" : "translate-x-full"
         )}
         role="dialog"
-        aria-label="Shopping cart"
+        aria-label={t.shoppingCart}
         aria-modal="true"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border">
           <h2 className="font-serif text-xl font-semibold text-foreground">
-            Your Cart{" "}
+            {t.yourCart}{" "}
             {cart.length > 0 && (
               <span className="text-muted-foreground font-sans text-sm font-normal">
-                ({cart.reduce((s, i) => s + i.quantity, 0)} items)
+                ({cart.reduce((s, i) => s + i.quantity, 0)} {t.items})
               </span>
             )}
           </h2>
           <button
             onClick={onClose}
             className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Close cart"
+            aria-label={t.closeCart}
           >
             <X className="w-5 h-5" />
           </button>
@@ -75,12 +79,12 @@ export default function CartDrawer({ open, onClose }: Props) {
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
               <ShoppingBag className="w-12 h-12 text-muted-foreground/40" />
-              <p className="text-muted-foreground">Your cart is empty.</p>
+              <p className="text-muted-foreground">{t.empty}</p>
               <button
                 onClick={onClose}
                 className="text-sm font-medium text-accent hover:underline"
               >
-                Continue Shopping
+                {t.continueShopping}
               </button>
             </div>
           ) : (
@@ -103,7 +107,7 @@ export default function CartDrawer({ open, onClose }: Props) {
                       {item.product.name}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {item.product.category}
+                      {translateCategory(locale, item.product.category)}
                     </p>
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-1 border border-border rounded">
@@ -112,7 +116,7 @@ export default function CartDrawer({ open, onClose }: Props) {
                             updateCartQuantity(item.product.id, item.quantity - 1)
                           }
                           className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                          aria-label="Decrease quantity"
+                          aria-label={t.decrease}
                         >
                           <Minus className="w-3 h-3" />
                         </button>
@@ -124,7 +128,7 @@ export default function CartDrawer({ open, onClose }: Props) {
                             updateCartQuantity(item.product.id, item.quantity + 1)
                           }
                           className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                          aria-label="Increase quantity"
+                          aria-label={t.increase}
                         >
                           <Plus className="w-3 h-3" />
                         </button>
@@ -137,7 +141,7 @@ export default function CartDrawer({ open, onClose }: Props) {
                   <button
                     onClick={() => removeFromCart(item.product.id)}
                     className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 self-start mt-0.5"
-                    aria-label={`Remove ${item.product.name}`}
+                    aria-label={t.remove.replace("{name}", item.product.name)}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -151,26 +155,26 @@ export default function CartDrawer({ open, onClose }: Props) {
         {cart.length > 0 && (
           <div className="px-6 py-6 border-t border-border space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Subtotal</span>
+              <span className="text-muted-foreground text-sm">{t.subtotal}</span>
               <span className="font-semibold text-foreground">
                 ${subtotal.toLocaleString()}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Shipping and taxes calculated at checkout.
+              {t.shippingNote}
             </p>
             <Link
               href="/checkout"
               onClick={onClose}
               className="block w-full bg-primary text-primary-foreground text-center py-3.5 rounded font-medium text-sm hover:opacity-90 transition-opacity"
             >
-              Proceed to Checkout
+              {t.proceed}
             </Link>
             <button
               onClick={onClose}
               className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Continue Shopping
+              {t.continueShopping}
             </button>
           </div>
         )}

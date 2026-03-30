@@ -56,7 +56,7 @@ export type AuditLog = {
   result?: string;
 };
 
-export type RoleName = "Administrator" | "Manager" | "Warehouse" | "Executive";
+export type RoleName = "Administrator" | "Manager" | "Warehouse" | "Executive" | "Client";
 
 export type AdminUser = {
   id: string;

@@ -18,6 +18,9 @@ func seed(db *gorm.DB) error {
 	if err := seedCategories(db); err != nil {
 		return err
 	}
+	if err := seedPermissions(db); err != nil {
+		return err
+	}
 	if err := seedOrderStatuses(db); err != nil {
 		return err
 	}
@@ -42,6 +45,7 @@ func seedRolesAndUsers(db *gorm.DB) error {
 		{Name: models.RoleManager},
 		{Name: models.RoleWarehouse},
 		{Name: models.RoleExecutive},
+		{Name: models.RoleClient},
 	}
 	for _, role := range roles {
 		if err := db.Where("name = ?", role.Name).FirstOrCreate(&role).Error; err != nil {
@@ -82,6 +86,97 @@ func seedCategories(db *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func seedPermissions(db *gorm.DB) error {
+	permissions := []models.Permission{
+		{Action: "create", Resource: "user", Effect: "allow", Description: "Create internal and client accounts"},
+		{Action: "read", Resource: "user", Effect: "allow", Description: "Read users and client profiles"},
+		{Action: "block", Resource: "user", Effect: "allow", Description: "Block or unblock users"},
+		{Action: "create", Resource: "product", Effect: "allow", Description: "Create catalog products"},
+		{Action: "read", Resource: "product", Effect: "allow", Description: "Read catalog products"},
+		{Action: "update", Resource: "product", Effect: "allow", Description: "Update catalog products"},
+		{Action: "delete", Resource: "product", Effect: "allow", Description: "Delete catalog products"},
+		{Action: "create", Resource: "order", Effect: "allow", Description: "Place orders"},
+		{Action: "read", Resource: "order", Effect: "allow", Description: "Read orders"},
+		{Action: "update", Resource: "order", Effect: "allow", Description: "Update order details"},
+		{Action: "status", Resource: "order", Effect: "allow", Description: "Change order status"},
+		{Action: "read", Resource: "audit_log", Effect: "allow", Description: "Read audit log"},
+		{Action: "create", Resource: "audit_log", Effect: "allow", Description: "Create audit entries"},
+		{Action: "train", Resource: "forecast", Effect: "allow", Description: "Train forecast model"},
+		{Action: "read", Resource: "forecast", Effect: "allow", Description: "Read forecast results"},
+	}
+
+	for _, permission := range permissions {
+		item := permission
+		if err := db.Where("action = ? AND resource = ? AND effect = ?", permission.Action, permission.Resource, permission.Effect).FirstOrCreate(&item).Error; err != nil {
+			return err
+		}
+	}
+
+	var roles []models.Role
+	if err := db.Find(&roles).Error; err != nil {
+		return err
+	}
+	var storedPermissions []models.Permission
+	if err := db.Find(&storedPermissions).Error; err != nil {
+		return err
+	}
+
+	roleMap := map[models.RoleName]uint{}
+	for _, role := range roles {
+		roleMap[role.Name] = role.ID
+	}
+	permMap := map[string]uint{}
+	for _, permission := range storedPermissions {
+		permMap[permission.Action+":"+permission.Resource] = permission.ID
+	}
+
+	assignments := map[models.RoleName][]string{
+		models.RoleAdmin: {
+			"create:user", "read:user", "block:user",
+			"create:product", "read:product", "update:product", "delete:product",
+			"create:order", "read:order", "update:order", "status:order",
+			"read:audit_log", "create:audit_log",
+			"train:forecast", "read:forecast",
+		},
+		models.RoleManager: {
+			"read:user",
+			"create:product", "read:product", "update:product",
+			"read:order", "update:order", "status:order",
+			"read:audit_log", "create:audit_log",
+			"read:forecast",
+		},
+		models.RoleWarehouse: {
+			"read:product",
+			"read:order", "update:order", "status:order",
+			"read:audit_log",
+		},
+		models.RoleExecutive: {
+			"read:order",
+			"read:audit_log",
+			"train:forecast", "read:forecast",
+		},
+		models.RoleClient: {
+			"create:user", "read:user",
+			"read:product",
+			"create:order", "read:order",
+		},
+	}
+
+	for roleName, items := range assignments {
+		for _, item := range items {
+			rolePermission := models.RolePermission{
+				RoleID:       roleMap[roleName],
+				PermissionID: permMap[item],
+			}
+			if err := db.Where("role_id = ? AND permission_id = ?", rolePermission.RoleID, rolePermission.PermissionID).FirstOrCreate(&rolePermission).Error; err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -234,7 +329,7 @@ func seedMLDataset(db *gorm.DB) error {
 			sold := int(float64(base+i%6) * seasonality)
 			priceBucket := "mid"
 			features := map[string]any{
-				"month":      int(dt.Month()),
+				"month":       int(dt.Month()),
 				"category_id": c.ID,
 				"seasonality": seasonality,
 				"price_level": priceBucket,

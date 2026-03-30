@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { usePreferences } from "@/lib/preferences";
+import { adminText, translateOrderStatus } from "@/lib/admin-i18n";
 import type { Order, Product } from "@/lib/types";
 
 const STATUS_OPTIONS: Order["status"][] = [
@@ -20,6 +22,8 @@ type Props = {
 };
 
 export default function OrderForm({ initialOrder, products, submitLabel, isSubmitting, onSubmit }: Props) {
+  const locale = usePreferences((s) => s.locale);
+  const t = adminText[locale].orderForm;
   const [order, setOrder] = useState<Order>(initialOrder);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,15 +62,15 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
     setError(null);
 
     if (!order.customer.trim() || !order.email.trim() || !order.address.trim()) {
-      setError("Customer, email, and address are required.");
+      setError(t.required);
       return;
     }
     if (order.items.length === 0) {
-      setError("Add at least one line item.");
+      setError(t.needItem);
       return;
     }
     if (order.items.some((item) => item.quantity <= 0)) {
-      setError("Each item quantity must be greater than zero.");
+      setError(t.quantityInvalid);
       return;
     }
 
@@ -79,14 +83,14 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <section className="rounded-xl border border-border bg-card p-5">
-          <h2 className="font-semibold text-foreground">Order Details</h2>
+          <h2 className="font-semibold text-foreground">{t.orderDetails}</h2>
           <div className="mt-4 space-y-4">
             <label className="space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Order ID</span>
+              <span className="text-sm font-medium text-foreground">{t.orderId}</span>
               <input value={order.id} disabled className="w-full rounded-lg border border-input bg-muted px-3 py-2 text-sm text-muted-foreground" />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Customer</span>
+              <span className="text-sm font-medium text-foreground">{t.customer}</span>
               <input
                 value={order.customer}
                 onChange={(e) => setOrder((current) => ({ ...current, customer: e.target.value }))}
@@ -94,7 +98,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Email</span>
+              <span className="text-sm font-medium text-foreground">{t.email}</span>
               <input
                 type="email"
                 value={order.email}
@@ -103,7 +107,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Address</span>
+              <span className="text-sm font-medium text-foreground">{t.address}</span>
               <textarea
                 value={order.address}
                 onChange={(e) => setOrder((current) => ({ ...current, address: e.target.value }))}
@@ -112,7 +116,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Date</span>
+              <span className="text-sm font-medium text-foreground">{t.date}</span>
               <input
                 type="datetime-local"
                 value={order.date.slice(0, 16)}
@@ -126,7 +130,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Status</span>
+              <span className="text-sm font-medium text-foreground">{t.status}</span>
               <select
                 value={order.status}
                 onChange={(e) => setOrder((current) => ({ ...current, status: e.target.value as Order["status"] }))}
@@ -134,7 +138,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
               >
                 {STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {translateOrderStatus(locale, status)}
                   </option>
                 ))}
               </select>
@@ -145,15 +149,15 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
         <section className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="font-semibold text-foreground">Items</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Adjust products and quantities for this order.</p>
+              <h2 className="font-semibold text-foreground">{t.items}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t.itemsHelp}</p>
             </div>
             <button
               type="button"
               onClick={addItem}
               className="rounded-lg border border-border px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
             >
-              Add item
+              {t.addItem}
             </button>
           </div>
 
@@ -162,7 +166,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
               <div key={`${item.product.id}-${index}`} className="rounded-lg border border-border p-4">
                 <div className="grid gap-4 md:grid-cols-[1fr_120px_auto]">
                   <label className="space-y-1.5">
-                    <span className="text-sm font-medium text-foreground">Product</span>
+                    <span className="text-sm font-medium text-foreground">{t.product}</span>
                     <select
                       value={item.product.id}
                       onChange={(e) => changeItemProduct(index, e.target.value)}
@@ -176,7 +180,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
                     </select>
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-sm font-medium text-foreground">Qty</span>
+                    <span className="text-sm font-medium text-foreground">{t.qty}</span>
                     <input
                       type="number"
                       min="1"
@@ -191,12 +195,12 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
                       onClick={() => removeItem(index)}
                       className="rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted"
                     >
-                      Remove
+                      {t.remove}
                     </button>
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Line total: ${(item.product.price * item.quantity).toLocaleString()}
+                  {t.lineTotal}: ${(item.product.price * item.quantity).toLocaleString()}
                 </p>
               </div>
             ))}
@@ -204,7 +208,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
 
           <div className="mt-6 border-t border-border pt-4">
             <p className="text-sm text-muted-foreground">
-              Order total
+              {t.orderTotal}
               <span className="ml-2 font-semibold text-foreground">
                 $
                 {order.items
@@ -222,7 +226,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
           disabled={isSubmitting}
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {isSubmitting ? "Saving..." : submitLabel}
+          {isSubmitting ? t.saving : submitLabel}
         </button>
       </div>
     </form>

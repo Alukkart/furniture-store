@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import AdminLayout from "@/components/AdminLayout";
 import OrderForm from "@/components/admin/OrderForm";
+import { usePreferences } from "@/lib/preferences";
+import { adminText } from "@/lib/admin-i18n";
 import { useStore } from "@/lib/store";
 
 export default function EditOrderPage() {
@@ -15,6 +17,8 @@ export default function EditOrderPage() {
   const orders = useStore((state) => state.orders);
   const isBootstrapping = useStore((state) => state.isBootstrapping);
   const updateOrder = useStore((state) => state.updateOrder);
+  const locale = usePreferences((s) => s.locale);
+  const t = adminText[locale].orderEdit;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -31,23 +35,23 @@ export default function EditOrderPage() {
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl font-bold text-foreground">Edit Order</h1>
-            <p className="mt-1 text-muted-foreground">Adjust customer info, item mix, delivery address, and status.</p>
+            <h1 className="font-serif text-3xl font-bold text-foreground">{t.title}</h1>
+            <p className="mt-1 text-muted-foreground">{t.subtitle}</p>
           </div>
           <Link href="/admin/orders" className="rounded-lg border border-border px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted">
-            Back to orders
+            {t.back}
           </Link>
         </div>
 
         {!order ? (
           <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-            {isBootstrapping ? "Loading order..." : "Order not found."}
+            {isBootstrapping ? t.loading : t.notFound}
           </div>
         ) : (
           <OrderForm
             initialOrder={order}
             products={products}
-            submitLabel="Save order"
+            submitLabel={t.save}
             isSubmitting={isSubmitting}
             onSubmit={async (nextOrder) => {
               setIsSubmitting(true);

@@ -16,6 +16,13 @@ import (
 // @description API for a furniture store backend.
 // @host localhost:8080
 // @BasePath /api
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @securitydefinitions.oauth2.password OAuth2Password
+// @tokenUrl /api/auth/token
+// @scope.read Grants read access
+// @scope.write Grants write access
 func main() {
 	cfg := config.Load()
 

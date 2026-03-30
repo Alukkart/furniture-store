@@ -3,45 +3,69 @@ package handlers
 import (
 	"strconv"
 
-	"backend/internal/ai"
+	"backend/internal/repositories"
+	"backend/internal/services"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type ForecastHandler struct {
-	service *ai.Service
+	service *services.ForecastService
 }
 
-func NewForecastHandler(service *ai.Service) *ForecastHandler {
-	return &ForecastHandler{service: service}
+func NewForecastHandler(db *gorm.DB, modelPath string) *ForecastHandler {
+	return &ForecastHandler{
+		service: services.NewForecastService(repositories.NewForecastRepository(db), modelPath),
+	}
 }
 
-// Forecast returns demand forecast for products and categories.
-// @Summary Forecast demand
+// Forecast returns replenishment forecast by category.
+// @Summary Get forecast
 // @Tags ai
 // @Produce json
-// @Security ApiKeyAuth
-// @Param days query int false "Forecast horizon in days" default(30)
-// @Success 200 {object} ai.ForecastResponse
-// @Failure 400 {object} errorResponse
-// @Failure 401 {object} errorResponse
-// @Failure 403 {object} errorResponse
-// @Failure 500 {object} errorResponse
+// @Security BearerAuth
+// @Security OAuth2Password
+// @Param months query int false "Planning horizon in months" default(3)
+// @Success 200 {object} services.ForecastResponse
+// @Failure 400 {object} handlers.errorResponse
+// @Failure 401 {object} handlers.errorResponse
+// @Failure 403 {object} handlers.errorResponse
+// @Failure 500 {object} handlers.errorResponse
 // @Router /forecast [get]
 func (h *ForecastHandler) Forecast(c *fiber.Ctx) error {
-	days := 30
-	if raw := c.Query("days"); raw != "" {
+	months := 3
+	if raw := c.Query("months"); raw != "" {
 		parsed, err := strconv.Atoi(raw)
 		if err != nil || parsed <= 0 {
-			return fiber.NewError(fiber.StatusBadRequest, "days must be a positive integer")
+			return fiber.NewError(fiber.StatusBadRequest, "months must be a positive integer")
 		}
-		days = parsed
+		months = parsed
 	}
 
-	forecast, err := h.service.Forecast(days)
+	forecast, err := h.service.Forecast(months)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to generate forecast")
 	}
 
 	return c.JSON(forecast)
+}
+
+// Train retrains and saves the forecast model.
+// @Summary Train forecast model
+// @Tags ai
+// @Produce json
+// @Security BearerAuth
+// @Security OAuth2Password
+// @Success 200 {object} ai.ModelArtifact
+// @Failure 401 {object} handlers.errorResponse
+// @Failure 403 {object} handlers.errorResponse
+// @Failure 500 {object} handlers.errorResponse
+// @Router /forecast/train [post]
+func (h *ForecastHandler) Train(c *fiber.Ctx) error {
+	artifact, err := h.service.TrainAndSave()
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to train forecast model")
+	}
+	return c.JSON(artifact)
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -16,11 +16,13 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 type Step = "cart" | "shipping" | "payment" | "confirmation";
 
 export default function CheckoutPage() {
+  const { currentUser } = useAuth();
   const cart = useStore((s) => s.cart);
   const removeFromCart = useStore((s) => s.removeFromCart);
   const updateCartQuantity = useStore((s) => s.updateCartQuantity);
@@ -46,6 +48,16 @@ export default function CheckoutPage() {
   const shippingCost = subtotal >= 999 ? 0 : 149;
   const tax = Math.round(subtotal * 0.08);
   const total = subtotal + shippingCost + tax;
+
+  useEffect(() => {
+    if (!currentUser) return;
+    setShipping((current) => ({
+      ...current,
+      email: current.email || currentUser.email,
+      firstName: current.firstName || currentUser.name.split(" ")[0] || current.firstName,
+      lastName: current.lastName || currentUser.name.split(" ").slice(1).join(" "),
+    }));
+  }, [currentUser]);
 
   const handlePlaceOrder = async () => {
     if (isPlacingOrder) return;

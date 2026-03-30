@@ -8,11 +8,8 @@ RUN go mod download
 
 COPY . .
 
-RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
-RUN swag init -g main.go -o docs
+RUN go build -o app main.go
 
-RUN go build main.go
+EXPOSE 8080
 
-EXPOSE 1488
-
-CMD ["./main"]
+CMD ["./app"]

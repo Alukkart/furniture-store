@@ -3,10 +3,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Product, CartItem, Order, AuditLog } from "./types";
-import { listProducts, updateProduct as updateProductRequest } from "@/services/products";
+import {
+  listProducts,
+  createProduct as createProductRequest,
+  updateProduct as updateProductRequest,
+  deleteProduct as deleteProductRequest,
+} from "@/services/products";
 import {
   listOrders,
   createOrder as createOrderRequest,
+  updateOrder as updateOrderRequest,
   updateOrderStatus as updateOrderStatusRequest,
 } from "@/services/orders";
 import { listAuditLogs, createAuditLog as createAuditLogRequest } from "@/services/auditLogs";
@@ -26,7 +32,10 @@ type StoreState = {
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  createProduct: (product: Product) => Promise<Product | null>;
   updateProduct: (product: Product, adminUser?: string) => Promise<Product | null>;
+  deleteProduct: (productId: string, adminUser?: string) => Promise<boolean>;
+  updateOrder: (order: Order, adminUser?: string) => Promise<Order | null>;
   updateOrderStatus: (
     orderId: string,
     status: Order["status"],
@@ -109,6 +118,18 @@ export const useStore = create<StoreState>()(
 
       clearCart: () => set({ cart: [] }),
 
+      createProduct: async (product) => {
+        try {
+          const created = await createProductRequest(product);
+          const [products, auditLogs] = await Promise.all([listProducts(), listAuditLogs()]);
+          set({ products, auditLogs, bootstrapError: null });
+          return created;
+        } catch (error) {
+          set({ bootstrapError: getApiErrorMessage(error, "Failed to create product") });
+          return null;
+        }
+      },
+
       updateProduct: async (product, adminUser = "admin@maison.co") => {
         try {
           const updated = await updateProductRequest(product.id, product);
@@ -117,6 +138,30 @@ export const useStore = create<StoreState>()(
           return updated;
         } catch (error) {
           set({ bootstrapError: getApiErrorMessage(error, `Failed to update product by ${adminUser}`) });
+          return null;
+        }
+      },
+
+      deleteProduct: async (productId, adminUser = "admin@maison.co") => {
+        try {
+          await deleteProductRequest(productId);
+          const [products, auditLogs] = await Promise.all([listProducts(), listAuditLogs()]);
+          set({ products, auditLogs, bootstrapError: null });
+          return true;
+        } catch (error) {
+          set({ bootstrapError: getApiErrorMessage(error, `Failed to delete product by ${adminUser}`) });
+          return false;
+        }
+      },
+
+      updateOrder: async (order, adminUser = "admin@maison.co") => {
+        try {
+          const updated = await updateOrderRequest(order.id, order, adminUser);
+          const [orders, auditLogs, products] = await Promise.all([listOrders(), listAuditLogs(), listProducts()]);
+          set({ orders, auditLogs, products, bootstrapError: null });
+          return updated;
+        } catch (error) {
+          set({ bootstrapError: getApiErrorMessage(error, "Failed to update order") });
           return null;
         }
       },

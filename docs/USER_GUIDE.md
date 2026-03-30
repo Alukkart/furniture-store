@@ -5,12 +5,20 @@
 - Manager: products/orders management, analytics read.
 - Warehouse: stock and warehouse statuses.
 - Executive: reports and demand forecast.
+- Client: registration, login, checkout, and tracking personal orders.
 
 ## Main Scenarios
 1. Login with your role account.
 2. Open `Admin` area.
 3. Work with inventory/orders based on your permissions.
 4. For analytics, open `Forecast` and review recommended purchases.
+
+## Client Scenario
+1. Open `/register` and create a client account.
+2. Sign in on `/login`.
+3. Add products to cart and place an order.
+4. Open `/account/orders` to track order statuses.
+5. Open `/settings` to change theme and density preferences.
 
 ## Checkout Scenario
 1. Open storefront.

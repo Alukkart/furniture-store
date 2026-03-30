@@ -3,6 +3,8 @@
 import { Fragment, useState } from "react";
 import { Search, X, ChevronDown, ShoppingBag } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
+import { usePreferences } from "@/lib/preferences";
+import { adminText, translateOrderStatus } from "@/lib/admin-i18n";
 import { useStore, type Order } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -22,18 +24,12 @@ const statusColors: Record<Order["status"], string> = {
   cancelled: "bg-red-100 text-red-700",
 };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 export default function OrdersPage() {
   const orders = useStore((s) => s.orders);
   const isBootstrapping = useStore((s) => s.isBootstrapping);
   const updateOrderStatus = useStore((s) => s.updateOrderStatus);
+  const locale = usePreferences((s) => s.locale);
+  const t = adminText[locale].orders;
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Order["status"] | "all">("all");
@@ -56,15 +52,11 @@ export default function OrdersPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div>
-          <h1 className="font-serif text-3xl font-bold text-foreground">Orders</h1>
-          <p className="text-muted-foreground mt-1">
-            View and manage all customer orders.
-          </p>
+          <h1 className="font-serif text-3xl font-bold text-foreground">{t.title}</h1>
+          <p className="text-muted-foreground mt-1">{t.subtitle}</p>
         </div>
 
-        {/* Summary */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {STATUS_OPTIONS.map((s) => {
             const count = orders.filter((o) => o.status === s).length;
@@ -80,26 +72,20 @@ export default function OrdersPage() {
                 )}
               >
                 <p className="text-2xl font-bold text-foreground">{count}</p>
-                <span
-                  className={cn(
-                    "text-xs font-medium px-2 py-0.5 rounded-full capitalize mt-1.5 inline-block",
-                    statusColors[s]
-                  )}
-                >
-                  {s}
+                <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full mt-1.5 inline-block", statusColors[s])}>
+                  {translateOrderStatus(locale, s)}
                 </span>
               </button>
             );
           })}
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-52 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search by customer, order ID, or email..."
+              placeholder={t.search}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 border border-input rounded-lg text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
@@ -119,42 +105,27 @@ export default function OrdersPage() {
               onClick={() => setStatusFilter("all")}
               className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
             >
-              <X className="w-3.5 h-3.5" /> Clear filter
+              <X className="w-3.5 h-3.5" /> {t.clearFilter}
             </button>
           )}
 
           <p className="text-sm text-muted-foreground ml-auto">
-            {filtered.length} order{filtered.length !== 1 ? "s" : ""} · Revenue:{" "}
-            <span className="font-semibold text-foreground">
-              ${totalRevenue.toLocaleString()}
-            </span>
+            {filtered.length} {filtered.length === 1 ? t.order : t.orders} · {t.revenue}:{" "}
+            <span className="font-semibold text-foreground">${totalRevenue.toLocaleString()}</span>
           </p>
         </div>
 
-        {/* Orders Table */}
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40">
-                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Order
-                  </th>
-                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
-                    Customer
-                  </th>
-                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                    Date
-                  </th>
-                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-right px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.tableOrder}</th>
+                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t.tableCustomer}</th>
+                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t.tableDate}</th>
+                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.tableTotal}</th>
+                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.tableStatus}</th>
+                  <th className="text-right px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.tableActions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -162,21 +133,12 @@ export default function OrdersPage() {
                   <Fragment key={order.id}>
                     <tr
                       className="hover:bg-muted/30 transition-colors cursor-pointer"
-                      onClick={() =>
-                        setExpandedId(expandedId === order.id ? null : order.id)
-                      }
+                      onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          <ChevronDown
-                            className={cn(
-                              "w-4 h-4 text-muted-foreground transition-transform flex-shrink-0",
-                              expandedId === order.id && "rotate-180"
-                            )}
-                          />
-                          <code className="text-xs font-mono text-foreground">
-                            {order.id}
-                          </code>
+                          <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform flex-shrink-0", expandedId === order.id && "rotate-180")} />
+                          <code className="text-xs font-mono text-foreground">{order.id}</code>
                         </div>
                       </td>
                       <td className="px-5 py-4 hidden md:table-cell">
@@ -186,32 +148,22 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="px-5 py-4 hidden lg:table-cell text-muted-foreground">
-                        {formatDate(order.date)}
+                        {new Date(order.date).toLocaleDateString(locale === "ru" ? "ru-RU" : "en-US")}
                       </td>
-                      <td className="px-5 py-4 font-semibold text-foreground">
-                        ${order.total.toLocaleString()}
-                      </td>
+                      <td className="px-5 py-4 font-semibold text-foreground">${order.total.toLocaleString()}</td>
                       <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                         <select
                           value={order.status}
                           onChange={async (e) => {
                             setUpdatingOrderId(order.id);
-                            await updateOrderStatus(
-                              order.id,
-                              e.target.value as Order["status"]
-                            );
+                            await updateOrderStatus(order.id, e.target.value as Order["status"]);
                             setUpdatingOrderId(null);
                           }}
                           disabled={updatingOrderId === order.id}
-                          className={cn(
-                            "text-xs font-medium px-2 py-1.5 rounded-full capitalize cursor-pointer focus:outline-none border-0 appearance-none",
-                            statusColors[order.status]
-                          )}
+                          className={cn("text-xs font-medium px-2 py-1.5 rounded-full cursor-pointer focus:outline-none border-0 appearance-none", statusColors[order.status])}
                         >
                           {STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
+                            <option key={s} value={s}>{translateOrderStatus(locale, s)}</option>
                           ))}
                         </select>
                       </td>
@@ -223,7 +175,7 @@ export default function OrdersPage() {
                           }}
                           className="text-xs text-accent hover:underline"
                         >
-                          {expandedId === order.id ? "Hide" : "Details"}
+                          {expandedId === order.id ? t.hide : t.details}
                         </button>
                       </td>
                     </tr>
@@ -232,23 +184,15 @@ export default function OrdersPage() {
                       <tr className="bg-secondary">
                         <td colSpan={6} className="px-5 py-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Items */}
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                                Order Items
-                              </p>
+                              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t.orderItems}</p>
                               <div className="space-y-2">
                                 {order.items.map((item, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center justify-between gap-4 bg-card rounded-lg px-4 py-2.5 border border-border"
-                                  >
+                                  <div key={idx} className="flex items-center justify-between gap-4 bg-card rounded-lg px-4 py-2.5 border border-border">
                                     <div className="min-w-0">
-                                      <p className="text-sm font-medium text-foreground truncate">
-                                        {item.product.name}
-                                      </p>
+                                      <p className="text-sm font-medium text-foreground truncate">{item.product.name}</p>
                                       <p className="text-xs text-muted-foreground">
-                                        Qty: {item.quantity} · ${item.product.price.toLocaleString()} each
+                                        {t.qty}: {item.quantity} · ${item.product.price.toLocaleString()} {t.each}
                                       </p>
                                     </div>
                                     <p className="text-sm font-semibold text-foreground flex-shrink-0">
@@ -259,30 +203,27 @@ export default function OrdersPage() {
                               </div>
                             </div>
 
-                            {/* Delivery */}
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                                Delivery Details
-                              </p>
+                              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t.deliveryDetails}</p>
                               <div className="bg-card border border-border rounded-lg px-4 py-3 space-y-2">
                                 <div className="flex gap-2">
-                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">Customer</p>
+                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">{t.customer}</p>
                                   <p className="text-xs font-medium text-foreground">{order.customer}</p>
                                 </div>
                                 <div className="flex gap-2">
-                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">Email</p>
+                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">{t.email}</p>
                                   <p className="text-xs font-medium text-foreground">{order.email}</p>
                                 </div>
                                 <div className="flex gap-2">
-                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">Address</p>
+                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">{t.address}</p>
                                   <p className="text-xs font-medium text-foreground">{order.address}</p>
                                 </div>
                                 <div className="flex gap-2">
-                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">Date</p>
-                                  <p className="text-xs font-medium text-foreground">{formatDate(order.date)}</p>
+                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">{t.date}</p>
+                                  <p className="text-xs font-medium text-foreground">{new Date(order.date).toLocaleDateString(locale === "ru" ? "ru-RU" : "en-US")}</p>
                                 </div>
                                 <div className="flex gap-2 pt-1 border-t border-border mt-1">
-                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">Total</p>
+                                  <p className="text-xs text-muted-foreground w-20 flex-shrink-0">{t.total}</p>
                                   <p className="text-xs font-bold text-foreground">${order.total.toLocaleString()}</p>
                                 </div>
                               </div>
@@ -299,11 +240,7 @@ export default function OrdersPage() {
             {filtered.length === 0 && (
               <div className="text-center py-16 text-muted-foreground">
                 <ShoppingBag className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p>
-                  {isBootstrapping
-                    ? "Loading orders..."
-                    : "No orders found matching your criteria."}
-                </p>
+                <p>{isBootstrapping ? t.loading : t.empty}</p>
               </div>
             )}
           </div>

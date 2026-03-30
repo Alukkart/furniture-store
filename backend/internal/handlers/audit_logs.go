@@ -17,6 +17,17 @@ func NewAuditLogHandler(db *gorm.DB) *AuditLogHandler {
 	return &AuditLogHandler{service: services.NewAuditService(repositories.NewAuditRepository(db))}
 }
 
+// List returns audit logs.
+// @Summary List audit logs
+// @Tags audit
+// @Produce json
+// @Security BearerAuth
+// @Security OAuth2Password
+// @Success 200 {array} models.AuditLog
+// @Failure 401 {object} handlers.errorResponse
+// @Failure 403 {object} handlers.errorResponse
+// @Failure 500 {object} handlers.errorResponse
+// @Router /audit-logs [get]
 func (h *AuditLogHandler) List(c *fiber.Ctx) error {
 	logs, err := h.service.List()
 	if err != nil {
@@ -25,6 +36,19 @@ func (h *AuditLogHandler) List(c *fiber.Ctx) error {
 	return c.JSON(logs)
 }
 
+// Create stores a manual audit log entry.
+// @Summary Create audit log
+// @Tags audit
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Security OAuth2Password
+// @Param payload body models.AuditLog true "Audit log payload"
+// @Success 201 {object} models.AuditLog
+// @Failure 400 {object} handlers.errorResponse
+// @Failure 401 {object} handlers.errorResponse
+// @Failure 403 {object} handlers.errorResponse
+// @Router /audit-logs [post]
 func (h *AuditLogHandler) Create(c *fiber.Ctx) error {
 	var payload models.AuditLog
 	if err := c.BodyParser(&payload); err != nil {

@@ -6,6 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { usePreferences } from "@/lib/preferences";
+import { siteText } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -18,20 +20,29 @@ export default function LoginPage() {
 
   const { login, loginError, currentUser } = useAuth();
   const bootstrap = useStore((s) => s.bootstrap);
+  const locale = usePreferences((s) => s.locale);
+  const t = siteText[locale].login;
+  const passwordToggleLabel =
+    locale === "ru"
+      ? showPassword
+        ? "Скрыть пароль"
+        : "Показать пароль"
+      : showPassword
+        ? "Hide password"
+        : "Show password";
   const router = useRouter();
 
-  // Already logged in — redirect straight to admin
   useEffect(() => {
     if (currentUser) {
-      router.replace("/admin");
+      router.replace(currentUser.role === "Client" ? "/account/orders" : "/admin");
     }
   }, [currentUser, router]);
 
   function validate() {
     const errors: { email?: string; password?: string } = {};
-    if (!email.trim()) errors.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Enter a valid email.";
-    if (!password) errors.password = "Password is required.";
+    if (!email.trim()) errors.email = t.requiredEmail;
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = t.invalidEmail;
+    if (!password) errors.password = t.requiredPassword;
     return errors;
   }
 
@@ -49,7 +60,6 @@ export default function LoginPage() {
 
     if (success) {
       await bootstrap(true);
-      router.push("/admin");
     }
 
     setIsLoading(false);
@@ -57,7 +67,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
-      {/* Left — Decorative Panel */}
       <div className="hidden lg:flex flex-col justify-between relative overflow-hidden bg-primary">
         <div className="absolute inset-0">
           <Image
@@ -77,7 +86,7 @@ export default function LoginPage() {
               <p className="font-serif font-bold text-primary-foreground text-lg leading-tight">
                 Maison & Co.
               </p>
-              <p className="text-xs text-primary-foreground/60">Admin Portal</p>
+              <p className="text-xs text-primary-foreground/60">{t.access}</p>
             </div>
           </Link>
         </div>
@@ -89,9 +98,7 @@ export default function LoginPage() {
             <cite className="text-sm text-primary-foreground/60 not-italic">— Steve Jobs</cite>
           </blockquote>
           <div className="border-t border-primary-foreground/20 pt-6">
-            <p className="text-sm text-primary-foreground/70">
-              Manage your store, track inventory, and monitor all administrative actions — all in one place.
-            </p>
+            <p className="text-sm text-primary-foreground/70">{t.blurb}</p>
           </div>
         </div>
         <div className="relative z-10 p-12">
@@ -103,9 +110,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right — Login Form */}
       <div className="flex flex-col justify-center px-6 py-12 lg:px-16 xl:px-24">
-        {/* Mobile logo */}
         <div className="lg:hidden mb-10">
           <Link href="/" className="inline-flex items-center gap-2.5">
             <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
@@ -116,30 +121,25 @@ export default function LoginPage() {
         </div>
 
         <div className="w-full max-w-sm mx-auto space-y-8">
-          {/* Heading */}
           <div className="space-y-1.5">
             <h1 className="font-serif text-3xl font-bold text-foreground text-balance">
-              Welcome back
+              {t.welcome}
             </h1>
-            <p className="text-muted-foreground text-sm">
-              Sign in to your admin account to continue.
-            </p>
+            <p className="text-muted-foreground text-sm">{t.subtitle}</p>
           </div>
 
-          {/* Demo credentials hint */}
           <div className="rounded-lg bg-secondary border border-border px-4 py-3">
-            <p className="text-xs font-semibold text-foreground mb-1.5">Demo credentials</p>
+            <p className="text-xs font-semibold text-foreground mb-1.5">{t.demo}</p>
             <div className="space-y-0.5 text-xs text-muted-foreground font-mono">
               <p>admin@maison.co / admin123</p>
               <p>manager@maison.co / manager123</p>
               <p>warehouse@maison.co / warehouse123</p>
               <p>executive@maison.co / executive123</p>
+              <p>{t.clientHint}</p>
             </div>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-            {/* Global error */}
             {loginError && !isLoading && (
               <div className="flex items-center gap-2.5 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3">
                 <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
@@ -147,10 +147,9 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Email */}
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-sm font-medium text-foreground">
-                Email address
+                {t.email}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -180,10 +179,9 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Password */}
             <div className="space-y-1.5">
               <label htmlFor="password" className="text-sm font-medium text-foreground">
-                Password
+                {t.password}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -209,7 +207,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={passwordToggleLabel}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -221,7 +219,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading}
@@ -238,23 +235,30 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Signing in...
+                  {t.signingIn}
                 </span>
               ) : (
-                "Sign in"
+                t.signIn
               )}
             </button>
           </form>
 
-          {/* Back to store */}
           <div className="pt-2 border-t border-border">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to storefront
-            </Link>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                {t.back}
+              </Link>
+              <Link
+                href="/register"
+                className="text-sm font-medium text-accent hover:opacity-80 transition-opacity"
+              >
+                {t.createClient}
+              </Link>
+            </div>
           </div>
         </div>
       </div>

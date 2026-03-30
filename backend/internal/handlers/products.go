@@ -25,6 +25,13 @@ func NewProductHandler(db *gorm.DB) *ProductHandler {
 	}
 }
 
+// List returns all products.
+// @Summary List products
+// @Tags products
+// @Produce json
+// @Success 200 {array} models.Product
+// @Failure 500 {object} handlers.errorResponse
+// @Router /products [get]
 func (h *ProductHandler) List(c *fiber.Ctx) error {
 	products, err := h.service.List()
 	if err != nil {
@@ -33,6 +40,19 @@ func (h *ProductHandler) List(c *fiber.Ctx) error {
 	return c.JSON(products)
 }
 
+// Create creates a new product.
+// @Summary Create product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Security OAuth2Password
+// @Param payload body models.Product true "Product payload"
+// @Success 201 {object} models.Product
+// @Failure 400 {object} handlers.errorResponse
+// @Failure 401 {object} handlers.errorResponse
+// @Failure 403 {object} handlers.errorResponse
+// @Router /products [post]
 func (h *ProductHandler) Create(c *fiber.Ctx) error {
 	var payload models.Product
 	if err := c.BodyParser(&payload); err != nil {
@@ -47,6 +67,15 @@ func (h *ProductHandler) Create(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(created)
 }
 
+// Get returns a product by ID.
+// @Summary Get product
+// @Tags products
+// @Produce json
+// @Param id path string true "Product ID"
+// @Success 200 {object} models.Product
+// @Failure 400 {object} handlers.errorResponse
+// @Failure 404 {object} handlers.errorResponse
+// @Router /products/{id} [get]
 func (h *ProductHandler) Get(c *fiber.Ctx) error {
 	id := strings.TrimSpace(c.Params("id"))
 	product, err := h.service.Get(id)
@@ -59,6 +88,21 @@ func (h *ProductHandler) Get(c *fiber.Ctx) error {
 	return c.JSON(product)
 }
 
+// Update updates a product by ID.
+// @Summary Update product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Security OAuth2Password
+// @Param id path string true "Product ID"
+// @Param payload body models.Product true "Product payload"
+// @Success 200 {object} models.Product
+// @Failure 400 {object} handlers.errorResponse
+// @Failure 401 {object} handlers.errorResponse
+// @Failure 403 {object} handlers.errorResponse
+// @Failure 404 {object} handlers.errorResponse
+// @Router /products/{id} [put]
 func (h *ProductHandler) Update(c *fiber.Ctx) error {
 	id := strings.TrimSpace(c.Params("id"))
 	var payload models.Product
@@ -79,6 +123,19 @@ func (h *ProductHandler) Update(c *fiber.Ctx) error {
 	return c.JSON(updated)
 }
 
+// Delete removes a product by ID.
+// @Summary Delete product
+// @Tags products
+// @Produce json
+// @Security BearerAuth
+// @Security OAuth2Password
+// @Param id path string true "Product ID"
+// @Success 204
+// @Failure 400 {object} handlers.errorResponse
+// @Failure 401 {object} handlers.errorResponse
+// @Failure 403 {object} handlers.errorResponse
+// @Failure 404 {object} handlers.errorResponse
+// @Router /products/{id} [delete]
 func (h *ProductHandler) Delete(c *fiber.Ctx) error {
 	id := strings.TrimSpace(c.Params("id"))
 	if err := h.service.Delete(id); err != nil {

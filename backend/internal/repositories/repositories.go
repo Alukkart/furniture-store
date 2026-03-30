@@ -87,6 +87,19 @@ func (r *OrderRepository) List() ([]models.Order, error) {
 	return orders, err
 }
 
+func (r *OrderRepository) ListByCustomerEmail(email string) ([]models.Order, error) {
+	var orders []models.Order
+	err := r.db.
+		Joins("JOIN customers ON customers.id = orders.customer_id").
+		Where("LOWER(customers.email) = ?", strings.ToLower(strings.TrimSpace(email))).
+		Preload("Customer").
+		Preload("StatusRef").
+		Preload("Items.Product.CategoryRef").
+		Order("orders.created_at desc").
+		Find(&orders).Error
+	return orders, err
+}
+
 func (r *OrderRepository) GetByID(id string) (models.Order, error) {
 	var order models.Order
 	err := r.db.Preload("Customer").Preload("StatusRef").Preload("Items.Product.CategoryRef").First(&order, "id = ?", id).Error
@@ -103,6 +116,17 @@ func (r *OrderRepository) SaveOrder(tx *gorm.DB, order *models.Order) error {
 	return tx.Create(order).Error
 }
 
+func (r *OrderRepository) UpdateOrder(tx *gorm.DB, order *models.Order) error {
+	res := tx.Save(order)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
 func (r *OrderRepository) SaveOrderItems(tx *gorm.DB, items []models.OrderItem) error {
 	if len(items) == 0 {
 		return nil
@@ -110,9 +134,20 @@ func (r *OrderRepository) SaveOrderItems(tx *gorm.DB, items []models.OrderItem) 
 	return tx.Create(&items).Error
 }
 
+func (r *OrderRepository) DeleteOrderItems(tx *gorm.DB, orderID string) error {
+	return tx.Where("order_id = ?", orderID).Delete(&models.OrderItem{}).Error
+}
+
 func (r *OrderRepository) UpdateStatus(tx *gorm.DB, order *models.Order, statusID uint) error {
+	res := tx.Model(&models.Order{}).Where("id = ?", order.ID).Update("status_id", statusID)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
 	order.StatusID = statusID
-	return tx.Save(order).Error
+	return nil
 }
 
 func (r *OrderRepository) Begin() *gorm.DB {

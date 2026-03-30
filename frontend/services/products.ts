@@ -11,7 +11,16 @@ export async function getProduct(id: string) {
   return data;
 }
 
+export async function createProduct(payload: Product) {
+  const { data } = await api.post<Product>("/products", payload);
+  return data;
+}
+
 export async function updateProduct(id: string, payload: Product) {
   const { data } = await api.put<Product>(`/products/${id}`, payload);
   return data;
+}
+
+export async function deleteProduct(id: string) {
+  await api.delete(`/products/${id}`);
 }

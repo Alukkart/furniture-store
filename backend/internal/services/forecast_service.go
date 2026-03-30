@@ -111,5 +111,8 @@ func (s *ForecastService) Forecast(periodMonths int) (ForecastResponse, error) {
 }
 
 func DefaultModelPath() string {
+	if value := os.Getenv("AI_MODEL_PATH"); value != "" {
+		return value
+	}
 	return filepath.Join("data", "forecast_model.json")
 }

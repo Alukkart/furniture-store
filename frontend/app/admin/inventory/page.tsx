@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Search,
   Edit2,
@@ -9,35 +10,45 @@ import {
   Save,
   Package,
   AlertTriangle,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
+import { useAuth } from "@/lib/auth";
+import { usePreferences } from "@/lib/preferences";
+import { adminText } from "@/lib/admin-i18n";
+import { translateCategory } from "@/lib/i18n";
 import { useStore, type Product } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-function StockBadge({ stock }: { stock: number }) {
+function StockBadge({ stock, lowLabel, outOfStockLabel, unitsLabel }: { stock: number; lowLabel: string; outOfStockLabel: string; unitsLabel: string }) {
   if (stock === 0)
     return (
       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">
-        Out of Stock
+        {outOfStockLabel}
       </span>
     );
   if (stock <= 10)
     return (
       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
-        Low: {stock}
+        {lowLabel}: {stock}
       </span>
     );
   return (
     <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-      {stock} units
+      {stock} {unitsLabel}
     </span>
   );
 }
 
 export default function InventoryPage() {
+  const { currentUser } = useAuth();
   const products = useStore((s) => s.products);
   const isBootstrapping = useStore((s) => s.isBootstrapping);
   const updateProduct = useStore((s) => s.updateProduct);
+  const deleteProduct = useStore((s) => s.deleteProduct);
+  const locale = usePreferences((s) => s.locale);
+  const t = adminText[locale].inventory;
 
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -76,6 +87,8 @@ export default function InventoryPage() {
 
   const totalValue = products.reduce((s, p) => s + p.price * p.stock, 0);
   const lowStockCount = products.filter((p) => p.stock <= 10).length;
+  const canCreate = currentUser?.role === "Administrator" || currentUser?.role === "Manager";
+  const canDelete = currentUser?.role === "Administrator";
 
   return (
     <AdminLayout>
@@ -83,30 +96,39 @@ export default function InventoryPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl font-bold text-foreground">Inventory</h1>
+            <h1 className="font-serif text-3xl font-bold text-foreground">{t.title}</h1>
             <p className="text-muted-foreground mt-1">
-              Manage product listings, pricing, and stock levels.
+              {t.subtitle}
             </p>
           </div>
+          {canCreate && (
+            <Link
+              href="/admin/inventory/new"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <Plus className="h-4 w-4" />
+              {t.newProduct}
+            </Link>
+          )}
         </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
-              label: "Total Products",
+              label: t.totalProducts,
               value: products.length,
               icon: Package,
               color: "bg-blue-50 text-blue-600",
             },
             {
-              label: "Inventory Value",
+              label: t.inventoryValue,
               value: `$${totalValue.toLocaleString()}`,
               icon: Package,
               color: "bg-green-50 text-green-600",
             },
             {
-              label: "Low Stock Alerts",
+              label: t.lowStockAlerts,
               value: lowStockCount,
               icon: AlertTriangle,
               color: lowStockCount > 0 ? "bg-yellow-50 text-yellow-600" : "bg-gray-50 text-gray-500",
@@ -129,7 +151,7 @@ export default function InventoryPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search by name, category, or SKU..."
+            placeholder={t.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 border border-input rounded-lg text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
@@ -151,22 +173,22 @@ export default function InventoryPage() {
               <thead>
                 <tr className="border-b border-border bg-muted/40">
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Product
+                    {t.product}
                   </th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
                     SKU
                   </th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Price
+                    {t.price}
                   </th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Stock
+                    {t.stock}
                   </th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                    Category
+                    {t.category}
                   </th>
                   <th className="text-right px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Actions
+                    {t.actions}
                   </th>
                 </tr>
               </thead>
@@ -247,13 +269,13 @@ export default function InventoryPage() {
                             className="w-20 border border-input rounded px-2 py-1 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                           />
                         ) : (
-                          <StockBadge stock={product.stock} />
+                          <StockBadge stock={product.stock} lowLabel={t.low} outOfStockLabel={t.outOfStock} unitsLabel={t.units} />
                         )}
                       </td>
 
                       {/* Category */}
                       <td className="px-5 py-4 hidden lg:table-cell">
-                        <span className="text-muted-foreground">{product.category}</span>
+                        <span className="text-muted-foreground">{translateCategory(locale, product.category)}</span>
                       </td>
 
                       {/* Actions */}
@@ -265,22 +287,41 @@ export default function InventoryPage() {
                               disabled={isSaving}
                               className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded hover:opacity-90 transition-opacity"
                             >
-                              <Save className="w-3.5 h-3.5" /> {isSaving ? "Saving..." : "Save"}
+                              <Save className="w-3.5 h-3.5" /> {isSaving ? t.saving : t.save}
                             </button>
                             <button
                               onClick={cancelEdit}
                               className="flex items-center gap-1.5 px-3 py-1.5 border border-border text-muted-foreground text-xs rounded hover:bg-muted transition-colors"
                             >
-                              <X className="w-3.5 h-3.5" /> Cancel
+                              <X className="w-3.5 h-3.5" /> {t.cancel}
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => startEdit(product)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 border border-border text-muted-foreground text-xs rounded hover:bg-muted transition-colors ml-auto"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" /> Edit
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              href={`/admin/inventory/${product.id}`}
+                              className="flex items-center gap-1.5 px-3 py-1.5 border border-border text-muted-foreground text-xs rounded hover:bg-muted transition-colors"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" /> {t.open}
+                            </Link>
+                            <button
+                              onClick={() => startEdit(product)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 border border-border text-muted-foreground text-xs rounded hover:bg-muted transition-colors"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" /> {t.quickEdit}
+                            </button>
+                            {canDelete && (
+                              <button
+                                onClick={async () => {
+                                  if (!window.confirm(t.deleteConfirm.replace("{name}", product.name))) return;
+                                  await deleteProduct(product.id);
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 text-xs rounded hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> {t.delete}
+                              </button>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -293,9 +334,7 @@ export default function InventoryPage() {
               <div className="text-center py-16 text-muted-foreground">
                 <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
                 <p>
-                  {isBootstrapping
-                    ? "Loading products..."
-                    : "No products found matching your search."}
+                  {isBootstrapping ? t.loading : t.empty}
                 </p>
               </div>
             )}

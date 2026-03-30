@@ -4,6 +4,8 @@ Base URL: `/api`
 
 ## Auth
 - `POST /auth/login` -> `{ user, token }`
+- `POST /auth/token` (Swagger OAuth2 password flow; put email into `username`)
+- `POST /auth/signup` (public client registration)
 - `GET /auth/me` (Bearer)
 - `POST /auth/register` (Admin only)
 
@@ -17,6 +19,7 @@ Base URL: `/api`
 ## Orders
 - `POST /orders` (public checkout)
 - `GET /orders` (Admin, Manager, Warehouse, Executive)
+- `GET /orders/my` (Client)
 - `PATCH /orders/:id/status` (Admin, Manager, Warehouse)
 
 ## References
@@ -36,7 +39,16 @@ Base URL: `/api`
 
 ## AI Forecast
 - `POST /forecast/train` (Admin, Executive)
-- `GET /forecast?period=3` (Admin, Manager, Executive)
+- `GET /forecast?months=3` (Admin, Manager, Executive)
+
+## Example Client Signup Request
+```json
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "password": "client123"
+}
+```
 
 ## Example Login Request
 ```json

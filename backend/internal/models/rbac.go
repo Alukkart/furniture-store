@@ -9,6 +9,7 @@ const (
 	RoleManager   RoleName = "Manager"
 	RoleWarehouse RoleName = "Warehouse"
 	RoleExecutive RoleName = "Executive"
+	RoleClient    RoleName = "Client"
 )
 
 type Role struct {
@@ -28,4 +29,24 @@ type User struct {
 	IsBlocked    bool      `gorm:"not null;default:false" json:"is_blocked"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type Permission struct {
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	Action      string    `gorm:"size:80;not null" json:"action"`
+	Resource    string    `gorm:"size:80;not null" json:"resource"`
+	Effect      string    `gorm:"size:16;not null;default:'allow'" json:"effect"`
+	Description string    `gorm:"size:255" json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type RolePermission struct {
+	ID           uint       `gorm:"primaryKey" json:"id"`
+	RoleID       uint       `gorm:"not null;index" json:"role_id"`
+	Role         Role       `gorm:"foreignKey:RoleID" json:"-"`
+	PermissionID uint       `gorm:"not null;index" json:"permission_id"`
+	Permission   Permission `gorm:"foreignKey:PermissionID" json:"permission"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
 }

@@ -6,6 +6,8 @@ import { SlidersHorizontal, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { usePreferences } from "@/lib/preferences";
+import { siteText, translateCategory } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 
 const CATEGORIES = [
@@ -19,14 +21,6 @@ const CATEGORIES = [
   "Rugs & Textiles",
 ];
 
-const SORT_OPTIONS = [
-  { value: "featured", label: "Featured" },
-  { value: "price-asc", label: "Price: Low to High" },
-  { value: "price-desc", label: "Price: High to Low" },
-  { value: "rating", label: "Highest Rated" },
-  { value: "name", label: "Name A–Z" },
-];
-
 function ShopContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "All";
@@ -34,11 +28,20 @@ function ShopContent() {
 
   const products = useStore((s) => s.products);
   const isBootstrapping = useStore((s) => s.isBootstrapping);
+  const locale = usePreferences((s) => s.locale);
+  const t = siteText[locale].shop;
   const [category, setCategory] = useState(initialCategory);
   const [sort, setSort] = useState("featured");
   const [saleOnly, setSaleOnly] = useState(initialSale);
   const [maxPrice, setMaxPrice] = useState(5000);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const sortOptions = [
+    { value: "featured", label: t.featured },
+    { value: "price-asc", label: t.priceAsc },
+    { value: "price-desc", label: t.priceDesc },
+    { value: "rating", label: t.rating },
+    { value: "name", label: t.name },
+  ];
 
   const filtered = useMemo(() => {
     let list = [...products];
@@ -73,34 +76,31 @@ function ShopContent() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1">
-        {/* Page Header */}
         <div className="bg-secondary border-b border-border py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-2">
-              Browse
+              {t.browse}
             </p>
             <h1 className="font-serif text-4xl font-bold text-foreground">
-              {category === "All" ? "All Furniture" : category}
+              {category === "All" ? t.allFurniture : translateCategory(locale, category)}
             </h1>
             <p className="text-muted-foreground mt-2">
-              {filtered.length} piece{filtered.length !== 1 ? "s" : ""} available
+              {filtered.length} {filtered.length === 1 ? t.piece : t.pieces} {t.available}
             </p>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex flex-col lg:flex-row gap-10">
-            {/* Sidebar Filters */}
             <aside
               className={`lg:w-60 flex-shrink-0 ${
                 filtersOpen ? "block" : "hidden lg:block"
               }`}
             >
               <div className="sticky top-24 space-y-8">
-                {/* Category */}
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-                    Category
+                    {t.category}
                   </h3>
                   <ul className="space-y-2">
                     {CATEGORIES.map((cat) => (
@@ -113,17 +113,16 @@ function ShopContent() {
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
-                          {cat}
+                          {translateCategory(locale, cat)}
                         </button>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Price */}
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-                    Max Price
+                    {t.maxPrice}
                   </h3>
                   <input
                     type="range"
@@ -135,14 +134,13 @@ function ShopContent() {
                     className="w-full accent-accent"
                   />
                   <p className="text-sm font-medium text-foreground mt-2">
-                    Up to ${maxPrice.toLocaleString()}
+                    {t.upTo} ${maxPrice.toLocaleString()}
                   </p>
                 </div>
 
-                {/* Sale toggle */}
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-                    Offers
+                    {t.offers}
                   </h3>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -151,29 +149,27 @@ function ShopContent() {
                       onChange={(e) => setSaleOnly(e.target.checked)}
                       className="accent-accent w-4 h-4"
                     />
-                    <span className="text-sm text-foreground">Sale items only</span>
+                    <span className="text-sm text-foreground">{t.saleOnly}</span>
                   </label>
                 </div>
               </div>
             </aside>
 
-            {/* Products Grid */}
             <div className="flex-1">
-              {/* Toolbar */}
               <div className="flex items-center justify-between mb-6 gap-4">
                 <button
                   className="lg:hidden flex items-center gap-2 text-sm font-medium text-muted-foreground border border-border px-3 py-2 rounded hover:border-foreground transition-colors"
                   onClick={() => setFiltersOpen(!filtersOpen)}
                 >
                   <SlidersHorizontal className="w-4 h-4" />
-                  Filters
+                  {t.filters}
                 </button>
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value)}
                   className="ml-auto bg-card border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
-                  {SORT_OPTIONS.map((opt) => (
+                  {sortOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label}
                     </option>
@@ -183,13 +179,13 @@ function ShopContent() {
 
               {isBootstrapping && products.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <p className="font-serif text-2xl text-foreground">Loading products...</p>
-                  <p className="text-muted-foreground mt-2">Please wait.</p>
+                  <p className="font-serif text-2xl text-foreground">{t.loadingTitle}</p>
+                  <p className="text-muted-foreground mt-2">{t.loadingText}</p>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <p className="font-serif text-2xl text-foreground">No products found</p>
-                  <p className="text-muted-foreground mt-2">Try adjusting your filters.</p>
+                  <p className="font-serif text-2xl text-foreground">{t.noProducts}</p>
+                  <p className="text-muted-foreground mt-2">{t.adjustFilters}</p>
                   <button
                     onClick={() => {
                       setCategory("All");
@@ -198,7 +194,7 @@ function ShopContent() {
                     }}
                     className="mt-4 flex items-center gap-1.5 text-sm text-accent hover:underline"
                   >
-                    <X className="w-4 h-4" /> Clear all filters
+                    <X className="w-4 h-4" /> {t.clearFilters}
                   </button>
                 </div>
               ) : (
@@ -218,8 +214,11 @@ function ShopContent() {
 }
 
 export default function ShopPage() {
+  const locale = usePreferences((s) => s.locale);
+  const loadingText = locale === "ru" ? "Загрузка..." : "Loading...";
+
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">{loadingText}</p></div>}>
       <ShopContent />
     </Suspense>
   );

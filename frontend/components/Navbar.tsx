@@ -1,24 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, Search, LayoutDashboard } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, LayoutDashboard, Settings2, LogOut, UserRound } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import { cn } from "@/lib/utils";
+import { usePreferences } from "@/lib/preferences";
+import { siteText, translateCategory } from "@/lib/i18n";
 import CartDrawer from "./CartDrawer";
 
 const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/shop", label: "Shop" },
-  { href: "/shop?category=Living Room", label: "Living Room" },
-  { href: "/shop?category=Bedroom", label: "Bedroom" },
-  { href: "/shop?category=Dining Room", label: "Dining Room" },
+  { href: "/", key: "home", category: null },
+  { href: "/shop", key: "shop", category: null },
+  { href: "/shop?category=Living Room", key: null, category: "Living Room" },
+  { href: "/shop?category=Bedroom", key: null, category: "Bedroom" },
+  { href: "/shop?category=Dining Room", key: null, category: "Dining Room" },
 ];
 
 export default function Navbar() {
   const cart = useStore((s) => s.cart);
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
+  const locale = usePreferences((s) => s.locale);
+  const setLocale = usePreferences((s) => s.setLocale);
+  const t = siteText[locale].navbar;
+  const isAdminUser = !!currentUser && currentUser.role !== "Client";
   const itemCount = cart.reduce((sum, i) => sum + i.quantity, 0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -43,7 +48,7 @@ export default function Navbar() {
                   href={link.href}
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
                 >
-                  {link.label}
+                  {link.key ? t[link.key] : translateCategory(locale, link.category ?? "")}
                 </Link>
               ))}
             </nav>
@@ -53,30 +58,64 @@ export default function Navbar() {
               <Link
                 href="/shop"
                 className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Search"
+                aria-label={t.search}
               >
                 <Search className="w-5 h-5" />
               </Link>
+              <button
+                type="button"
+                onClick={() => setLocale(locale === "en" ? "ru" : "en")}
+                className="inline-flex items-center rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold tracking-wider text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                aria-label="Language switch"
+              >
+                {siteText[locale].languageShort}
+              </button>
               {currentUser ? (
-                <Link
-                  href="/admin"
-                  className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Admin panel"
-                >
-                  <LayoutDashboard className="w-5 h-5" />
-                </Link>
+                <>
+                  <Link
+                    href="/account/orders"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                  >
+                    <UserRound className="w-4 h-4" />
+                    {t.account}
+                  </Link>
+                  {isAdminUser && (
+                    <Link
+                      href="/admin"
+                      className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={t.dashboard}
+                    >
+                      <LayoutDashboard className="w-5 h-5" />
+                    </Link>
+                  )}
+                  <Link
+                    href="/settings"
+                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={t.settings}
+                  >
+                    <Settings2 className="w-5 h-5" />
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={t.signOut}
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </>
               ) : (
                 <Link
                   href="/login"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
                 >
-                  Admin
+                  <UserRound className="w-4 h-4" />
+                  {t.signIn}
                 </Link>
               )}
               <button
                 onClick={() => setCartOpen(true)}
                 className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={`Cart (${itemCount} items)`}
+                aria-label={`${t.cart} (${itemCount})`}
               >
                 <ShoppingCart className="w-5 h-5" />
                 {itemCount > 0 && (
@@ -107,9 +146,60 @@ export default function Navbar() {
                   onClick={() => setMobileOpen(false)}
                   className="py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider border-b border-border last:border-0"
                 >
-                  {link.label}
+                  {link.key ? t[link.key] : translateCategory(locale, link.category ?? "")}
                 </Link>
               ))}
+              <button
+                type="button"
+                onClick={() => setLocale(locale === "en" ? "ru" : "en")}
+                className="py-3 text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider border-b border-border"
+              >
+                {siteText[locale].languageShort}
+              </button>
+              {currentUser && (
+                <>
+                  <Link
+                    href="/account/orders"
+                    onClick={() => setMobileOpen(false)}
+                    className="py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider border-b border-border"
+                  >
+                    {t.account}
+                  </Link>
+                  {isAdminUser ? (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className="py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider border-b border-border"
+                    >
+                      {t.dashboard}
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/account/orders"
+                      onClick={() => setMobileOpen(false)}
+                      className="py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider border-b border-border"
+                    >
+                      {t.myOrders}
+                    </Link>
+                  )}
+                  <Link
+                    href="/settings"
+                    onClick={() => setMobileOpen(false)}
+                    className="py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider border-b border-border"
+                  >
+                    {t.settings}
+                  </Link>
+                </>
+              )}
+              {!currentUser && (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider border-b border-border"
+                >
+                  {t.signIn}
+                </Link>
+              )}
             </nav>
           </div>
         )}

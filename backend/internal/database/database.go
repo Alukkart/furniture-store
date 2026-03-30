@@ -52,6 +52,8 @@ func Connect(cfg config.Config) (*gorm.DB, error) {
 func autoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.Role{},
+		&models.Permission{},
+		&models.RolePermission{},
 		&models.User{},
 		&models.Category{},
 		&models.Product{},
@@ -62,4 +64,11 @@ func autoMigrate(db *gorm.DB) error {
 		&models.AuditLog{},
 		&models.MLDataset{},
 	)
+}
+
+func ConnectSeedOnlyForTests(db *gorm.DB, _ config.Config) error {
+	if err := autoMigrate(db); err != nil {
+		return err
+	}
+	return seed(db)
 }

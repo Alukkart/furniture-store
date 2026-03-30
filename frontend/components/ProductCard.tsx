@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star, ShoppingCart } from "lucide-react";
 import { useStore, type Product } from "@/lib/store";
+import { usePreferences } from "@/lib/preferences";
+import { siteText, translateCategory } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -13,6 +15,8 @@ type Props = {
 
 export default function ProductCard({ product, className }: Props) {
   const addToCart = useStore((s) => s.addToCart);
+  const locale = usePreferences((s) => s.locale);
+  const t = siteText[locale].productCard;
 
   return (
     <article
@@ -31,7 +35,7 @@ export default function ProductCard({ product, className }: Props) {
           />
           {product.originalPrice && (
             <span className="absolute top-3 left-3 bg-accent text-accent-foreground text-xs font-semibold px-2.5 py-1 rounded">
-              SALE
+              {t.sale}
             </span>
           )}
         </div>
@@ -39,7 +43,7 @@ export default function ProductCard({ product, className }: Props) {
 
       <div className="p-4">
         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-          {product.category}
+          {translateCategory(locale, product.category)}
         </p>
         <Link href={`/product/${product.id}`}>
           <h3 className="font-serif text-lg font-semibold text-foreground hover:text-accent transition-colors leading-snug">
@@ -81,20 +85,20 @@ export default function ProductCard({ product, className }: Props) {
             onClick={() => addToCart(product)}
             disabled={product.stock === 0}
             className="flex items-center gap-2 bg-primary text-primary-foreground text-xs font-medium px-3.5 py-2 rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={`Add ${product.name} to cart`}
+            aria-label={t.addToCartAria.replace("{name}", product.name)}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
-            Add
+            {t.add}
           </button>
         </div>
 
         {product.stock <= 5 && product.stock > 0 && (
           <p className="mt-2 text-xs text-accent font-medium">
-            Only {product.stock} left in stock
+            {t.onlyLeft.replace("{count}", String(product.stock))}
           </p>
         )}
         {product.stock === 0 && (
-          <p className="mt-2 text-xs text-muted-foreground">Out of stock</p>
+          <p className="mt-2 text-xs text-muted-foreground">{t.outOfStock}</p>
         )}
       </div>
     </article>
