@@ -4,12 +4,13 @@ import { use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Star, Minus, Plus, ShoppingCart, Package, RotateCcw, Shield } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Package, RotateCcw, Shield } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { useStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
+
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -128,31 +129,8 @@ export default function ProductPage({ params }: Props) {
                 {product.name}
               </h1>
 
-              {/* Rating */}
-              <div className="flex items-center gap-2 mt-4">
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={cn(
-                        "w-4 h-4",
-                        i < Math.floor(product.rating)
-                          ? "fill-accent text-accent"
-                          : "fill-muted text-muted-foreground/30"
-                      )}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-foreground">
-                  {product.rating}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  ({product.reviews} reviews)
-                </span>
-              </div>
-
               {/* Price */}
-              <div className="flex items-baseline gap-3 mt-6">
+              <div className="flex items-baseline gap-3 mt-4">
                 <span className="text-3xl font-bold text-foreground">
                   ${product.price.toLocaleString()}
                 </span>

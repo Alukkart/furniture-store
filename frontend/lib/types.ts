@@ -13,8 +13,6 @@ export type Product = {
   sku: string;
   is_active?: boolean;
   featured: boolean;
-  rating: number;
-  reviews: number;
 };
 
 export type CartItem = {

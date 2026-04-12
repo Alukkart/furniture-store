@@ -47,6 +47,10 @@ type StoreState = {
 
 let bootstrapPromise: Promise<void> | null = null;
 
+function clampCartQuantity(quantity: number, stock: number) {
+  return Math.max(0, Math.min(quantity, stock));
+}
+
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
@@ -89,14 +93,20 @@ export const useStore = create<StoreState>()(
       addToCart: (product, quantity = 1) => {
         set((state) => {
           const existing = state.cart.find((i) => i.product.id === product.id);
+          const nextQuantity = clampCartQuantity((existing?.quantity ?? 0) + quantity, product.stock);
+
+          if (nextQuantity <= 0) {
+            return state;
+          }
+
           if (existing) {
             return {
               cart: state.cart.map((i) =>
-                i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
+                i.product.id === product.id ? { ...i, quantity: nextQuantity } : i
               ),
             };
           }
-          return { cart: [...state.cart, { product, quantity }] };
+          return { cart: [...state.cart, { product, quantity: nextQuantity }] };
         });
       },
 
@@ -107,12 +117,18 @@ export const useStore = create<StoreState>()(
       },
 
       updateCartQuantity: (productId, quantity) => {
-        if (quantity <= 0) {
+        const item = get().cart.find((cartItem) => cartItem.product.id === productId);
+        if (!item) return;
+
+        const nextQuantity = clampCartQuantity(quantity, item.product.stock);
+        if (nextQuantity <= 0) {
           get().removeFromCart(productId);
           return;
         }
         set((state) => ({
-          cart: state.cart.map((i) => (i.product.id === productId ? { ...i, quantity } : i)),
+          cart: state.cart.map((i) =>
+            i.product.id === productId ? { ...i, quantity: nextQuantity } : i
+          ),
         }));
       },
 

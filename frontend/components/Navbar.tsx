@@ -1,7 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, Search, LayoutDashboard, Settings2, LogOut, UserRound } from "lucide-react";
+import {
+  ShoppingCart,
+  Menu,
+  X,
+  Search,
+  LayoutDashboard,
+  Settings2,
+  LogOut,
+  LogIn,
+  UserRound,
+  Languages,
+} from "lucide-react";
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
@@ -16,6 +27,9 @@ const navLinks = [
   { href: "/shop?category=Bedroom", key: null, category: "Bedroom" },
   { href: "/shop?category=Dining Room", key: null, category: "Dining Room" },
 ];
+
+const toolbarButtonClass =
+  "relative inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground";
 
 export default function Navbar() {
   const cart = useStore((s) => s.cart);
@@ -55,34 +69,28 @@ export default function Navbar() {
 
             {/* Actions */}
             <div className="flex items-center gap-1">
-              <Link
-                href="/shop"
-                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={t.search}
-              >
-                <Search className="w-5 h-5" />
-              </Link>
               <button
                 type="button"
                 onClick={() => setLocale(locale === "en" ? "ru" : "en")}
-                className="inline-flex items-center rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold tracking-wider text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-                aria-label="Language switch"
+                className={toolbarButtonClass}
+                aria-label={siteText[locale].languageShort}
+                title={siteText[locale].languageShort}
               >
-                {siteText[locale].languageShort}
+                <Languages className="w-5 h-5" />
               </button>
               {currentUser ? (
                 <>
                   <Link
                     href="/account/orders"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                    className={toolbarButtonClass}
+                    aria-label={t.account}
                   >
-                    <UserRound className="w-4 h-4" />
-                    {t.account}
+                    <UserRound className="w-5 h-5" />
                   </Link>
                   {isAdminUser && (
                     <Link
                       href="/admin"
-                      className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                      className={toolbarButtonClass}
                       aria-label={t.dashboard}
                     >
                       <LayoutDashboard className="w-5 h-5" />
@@ -90,14 +98,14 @@ export default function Navbar() {
                   )}
                   <Link
                     href="/settings"
-                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                    className={toolbarButtonClass}
                     aria-label={t.settings}
                   >
                     <Settings2 className="w-5 h-5" />
                   </Link>
                   <button
                     onClick={logout}
-                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                    className={toolbarButtonClass}
                     aria-label={t.signOut}
                   >
                     <LogOut className="w-5 h-5" />
@@ -106,15 +114,15 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                  className={toolbarButtonClass}
+                  aria-label={t.signIn}
                 >
-                  <UserRound className="w-4 h-4" />
-                  {t.signIn}
+                  <LogIn className="w-5 h-5" />
                 </Link>
               )}
               <button
                 onClick={() => setCartOpen(true)}
-                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className={toolbarButtonClass}
                 aria-label={`${t.cart} (${itemCount})`}
               >
                 <ShoppingCart className="w-5 h-5" />
@@ -126,7 +134,7 @@ export default function Navbar() {
               </button>
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className={`md:hidden ${toolbarButtonClass}`}
                 aria-label="Menu"
               >
                 {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

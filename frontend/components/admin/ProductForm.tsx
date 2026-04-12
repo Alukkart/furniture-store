@@ -29,8 +29,6 @@ type ProductDraft = {
   stock: string;
   sku: string;
   featured: boolean;
-  rating: string;
-  reviews: string;
 };
 
 type Props = {
@@ -54,8 +52,6 @@ function toDraft(product: Product): ProductDraft {
     stock: String(product.stock),
     sku: product.sku,
     featured: product.featured,
-    rating: String(product.rating),
-    reviews: String(product.reviews),
   };
 }
 
@@ -72,8 +68,6 @@ export function createEmptyProduct(): Product {
     stock: 0,
     sku: "",
     featured: false,
-    rating: 0,
-    reviews: 0,
   };
 }
 
@@ -102,8 +96,6 @@ export default function ProductForm({ initialProduct, submitLabel, isSubmitting,
       stock: Number(draft.stock),
       sku: draft.sku.trim(),
       featured: draft.featured,
-      rating: Number(draft.rating),
-      reviews: Number(draft.reviews),
     };
 
     if (!payload.name || !payload.category || !payload.image || !payload.description || !payload.dimensions || !payload.material || !payload.sku) {
@@ -111,7 +103,7 @@ export default function ProductForm({ initialProduct, submitLabel, isSubmitting,
       return;
     }
 
-    if ([payload.price, payload.stock, payload.rating, payload.reviews].some((value) => Number.isNaN(value))) {
+    if ([payload.price, payload.stock].some((value) => Number.isNaN(value))) {
       setError(t.invalidNumbers);
       return;
     }
@@ -183,14 +175,6 @@ export default function ProductForm({ initialProduct, submitLabel, isSubmitting,
               <label className="space-y-1.5">
                 <span className="text-sm font-medium text-foreground">{t.stock}</span>
                 <input type="number" min="0" value={draft.stock} onChange={(e) => setDraft((current) => ({ ...current, stock: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium text-foreground">{t.rating}</span>
-                <input type="number" min="0" max="5" step="0.1" value={draft.rating} onChange={(e) => setDraft((current) => ({ ...current, rating: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium text-foreground">{t.reviews}</span>
-                <input type="number" min="0" value={draft.reviews} onChange={(e) => setDraft((current) => ({ ...current, reviews: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />
               </label>
               <label className="flex items-center gap-3 rounded-lg border border-border px-3 py-2">
                 <input type="checkbox" checked={draft.featured} onChange={(e) => setDraft((current) => ({ ...current, featured: e.target.checked }))} className="h-4 w-4" />

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Star, ShoppingCart } from "lucide-react";
+import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { useStore, type Product } from "@/lib/store";
 import { usePreferences } from "@/lib/preferences";
 import { siteText, translateCategory } from "@/lib/i18n";
@@ -14,9 +14,13 @@ type Props = {
 };
 
 export default function ProductCard({ product, className }: Props) {
+  const cart = useStore((s) => s.cart);
   const addToCart = useStore((s) => s.addToCart);
+  const updateCartQuantity = useStore((s) => s.updateCartQuantity);
   const locale = usePreferences((s) => s.locale);
   const t = siteText[locale].productCard;
+  const cartItem = cart.find((item) => item.product.id === product.id);
+  const quantityInCart = cartItem?.quantity ?? 0;
 
   return (
     <article
@@ -50,26 +54,6 @@ export default function ProductCard({ product, className }: Props) {
             {product.name}
           </h3>
         </Link>
-
-        <div className="flex items-center gap-1.5 mt-2">
-          <div className="flex items-center gap-0.5">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={cn(
-                  "w-3 h-3",
-                  i < Math.floor(product.rating)
-                    ? "fill-accent text-accent"
-                    : "fill-muted text-muted-foreground/30"
-                )}
-              />
-            ))}
-          </div>
-          <span className="text-xs text-muted-foreground">
-            ({product.reviews})
-          </span>
-        </div>
-
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-semibold text-foreground">
@@ -81,15 +65,43 @@ export default function ProductCard({ product, className }: Props) {
               </span>
             )}
           </div>
-          <button
-            onClick={() => addToCart(product)}
-            disabled={product.stock === 0}
-            className="flex items-center gap-2 bg-primary text-primary-foreground text-xs font-medium px-3.5 py-2 rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={t.addToCartAria.replace("{name}", product.name)}
-          >
-            <ShoppingCart className="w-3.5 h-3.5" />
-            {t.add}
-          </button>
+          {quantityInCart > 0 ? (
+            <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-1">
+              <button
+                type="button"
+                onClick={() => updateCartQuantity(product.id, quantityInCart - 1)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10"
+                aria-label={siteText[locale].cart.decrease}
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <div className="min-w-[4.5rem] text-center">
+                <p className="text-xs text-muted-foreground">
+                  {quantityInCart}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => updateCartQuantity(product.id, quantityInCart + 1)}
+                disabled={quantityInCart >= product.stock}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label={siteText[locale].cart.increase}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => addToCart(product)}
+              disabled={product.stock === 0}
+              className="flex items-center gap-2 bg-primary text-primary-foreground text-xs font-medium px-3.5 py-2 rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={t.addToCartAria.replace("{name}", product.name)}
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              {t.add}
+            </button>
+          )}
         </div>
 
         {product.stock <= 5 && product.stock > 0 && (

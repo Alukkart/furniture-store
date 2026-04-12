@@ -73,21 +73,18 @@ export default function HomePage() {
             role: "Дизайнер интерьеров",
             review:
               "Диван Haven выглядит великолепно. Качество заметно выше всего, что я встречала в этом ценовом сегменте. Клиенты всегда остаются под впечатлением.",
-            rating: 5,
           },
           {
             name: "Джеймс Т.",
             role: "Владелец дома",
             review:
               "Доставка прошла безупречно, а стол Strata приехал в идеальном состоянии. Качество материалов чувствуется сразу. Полностью оправдывает цену.",
-            rating: 5,
           },
           {
             name: "Елена Р.",
             role: "Архитектор",
             review:
               "Я обставила уже три проекта мебелью Maison & Co., и клиенты остались очень довольны. Стабильное качество и команда, которой действительно не все равно.",
-            rating: 5,
           },
         ]
       : [
@@ -96,21 +93,18 @@ export default function HomePage() {
             role: "Interior Designer",
             review:
               "The Haven Sectional is absolutely stunning. The quality far exceeds anything I've found at a similar price point. My clients are always impressed.",
-            rating: 5,
           },
           {
             name: "James T.",
             role: "Homeowner",
             review:
               "Delivery was seamless and the Strata dining table arrived in perfect condition. The craftsmanship is evident the moment you touch it. Worth every penny.",
-            rating: 5,
           },
           {
             name: "Elena R.",
             role: "Architect",
             review:
               "I've furnished three projects with Maison & Co. pieces and my clients have never been happier. Consistent quality and a team that genuinely cares.",
-            rating: 5,
           },
         ];
 
@@ -305,11 +299,6 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((entry) => (
               <div key={entry.name} className="bg-card border border-border rounded-lg p-7">
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(entry.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-accent text-accent" />
-                  ))}
-                </div>
                 <p className="text-foreground/80 leading-relaxed text-sm italic">
                   "{entry.review}"
                 </p>

@@ -39,7 +39,6 @@ function ShopContent() {
     { value: "featured", label: t.featured },
     { value: "price-asc", label: t.priceAsc },
     { value: "price-desc", label: t.priceDesc },
-    { value: "rating", label: t.rating },
     { value: "name", label: t.name },
   ];
 
@@ -56,9 +55,6 @@ function ShopContent() {
         break;
       case "price-desc":
         list.sort((a, b) => b.price - a.price);
-        break;
-      case "rating":
-        list.sort((a, b) => b.rating - a.rating);
         break;
       case "name":
         list.sort((a, b) => a.name.localeCompare(b.name));

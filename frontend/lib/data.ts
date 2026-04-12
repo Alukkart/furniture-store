@@ -13,8 +13,6 @@ export type Product = {
   stock: number;
   sku: string;
   featured: boolean;
-  rating: number;
-  reviews: number;
 };
 
 export type CartItem = {
@@ -58,8 +56,6 @@ export const PRODUCTS: Product[] = [
     stock: 12,
     sku: "SOF-HVNS-BEI",
     featured: true,
-    rating: 4.8,
-    reviews: 124,
   },
   {
     id: "p2",
@@ -74,8 +70,6 @@ export const PRODUCTS: Product[] = [
     stock: 28,
     sku: "CHR-ARIA-TER",
     featured: true,
-    rating: 4.7,
-    reviews: 89,
   },
   {
     id: "p3",
@@ -91,8 +85,6 @@ export const PRODUCTS: Product[] = [
     stock: 8,
     sku: "TBL-STRW-WAL",
     featured: true,
-    rating: 4.9,
-    reviews: 56,
   },
   {
     id: "p4",
@@ -107,8 +99,6 @@ export const PRODUCTS: Product[] = [
     stock: 15,
     sku: "BED-CLPL-CRM",
     featured: true,
-    rating: 4.9,
-    reviews: 201,
   },
   {
     id: "p5",
@@ -123,8 +113,6 @@ export const PRODUCTS: Product[] = [
     stock: 20,
     sku: "SHF-LTOK-NAT",
     featured: false,
-    rating: 4.6,
-    reviews: 43,
   },
   {
     id: "p6",
@@ -139,8 +127,6 @@ export const PRODUCTS: Product[] = [
     stock: 35,
     sku: "DSK-STUD-WHT",
     featured: false,
-    rating: 4.5,
-    reviews: 67,
   },
   {
     id: "p7",
@@ -155,8 +141,6 @@ export const PRODUCTS: Product[] = [
     stock: 42,
     sku: "LMP-SOLB-BRS",
     featured: false,
-    rating: 4.7,
-    reviews: 98,
   },
   {
     id: "p8",
@@ -172,8 +156,6 @@ export const PRODUCTS: Product[] = [
     stock: 18,
     sku: "RUG-MRKW-CRM",
     featured: false,
-    rating: 4.8,
-    reviews: 77,
   },
 ];
 
