@@ -46,3 +46,28 @@ export function getApiErrorMessage(error: unknown, fallback = "Request failed") 
   if (error instanceof Error) return error.message;
   return fallback;
 }
+
+export function isDuplicateEmailError(error: unknown) {
+  if (!axios.isAxiosError(error)) return false;
+
+  const payload = error.response?.data;
+  const responseMessage =
+    typeof payload === "string"
+      ? payload
+      : typeof payload === "object" && payload !== null
+      ? typeof (payload as { message?: unknown }).message === "string"
+        ? (payload as { message: string }).message
+        : typeof (payload as { error?: unknown }).error === "string"
+        ? (payload as { error: string }).error
+        : ""
+      : "";
+
+  const normalized = `${responseMessage} ${error.message}`.toLowerCase();
+
+  return (
+    normalized.includes("idx_users_email") ||
+    normalized.includes("duplicate key value") ||
+    normalized.includes("sqlstate 23505") ||
+    normalized.includes("duplicate") && normalized.includes("email")
+  );
+}

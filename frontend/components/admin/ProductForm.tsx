@@ -163,7 +163,7 @@ export default function ProductForm({ initialProduct, submitLabel, isSubmitting,
         <div className="space-y-6">
           <section className="rounded-xl border border-border bg-card p-5">
             <h2 className="font-semibold text-foreground">{t.commerce}</h2>
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 flex flex-col gap-3">
               <label className="space-y-1.5">
                 <span className="text-sm font-medium text-foreground">{t.price}</span>
                 <input type="number" min="0" value={draft.price} onChange={(e) => setDraft((current) => ({ ...current, price: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />

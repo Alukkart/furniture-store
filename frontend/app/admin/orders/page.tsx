@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Fragment, useState } from "react";
 import { Search, X, ChevronDown, ShoppingBag } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
@@ -168,15 +169,23 @@ export default function OrdersPage() {
                         </select>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedId(expandedId === order.id ? null : order.id);
-                          }}
-                          className="text-xs text-accent hover:underline"
+                        <div
+                          className="flex items-center justify-end gap-3"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          {expandedId === order.id ? t.hide : t.details}
-                        </button>
+                          <Link
+                            href={`/admin/orders/${order.id}`}
+                            className="text-xs font-medium text-foreground hover:text-accent transition-colors"
+                          >
+                            {t.edit}
+                          </Link>
+                          <button
+                            onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+                            className="text-xs text-accent hover:underline"
+                          >
+                            {expandedId === order.id ? t.hide : t.details}
+                          </button>
+                        </div>
                       </td>
                     </tr>
 

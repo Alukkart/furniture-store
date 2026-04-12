@@ -8,7 +8,7 @@ import { usePreferences } from "@/lib/preferences";
 import { siteText } from "@/lib/i18n";
 import { signupClient } from "@/services/auth";
 import { useAuth } from "@/lib/auth";
-import { getApiErrorMessage } from "@/services/http";
+import { getApiErrorMessage, isDuplicateEmailError } from "@/services/http";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -47,7 +47,11 @@ export default function RegisterPage() {
       await login(form.email, form.password);
       router.push("/account/orders");
     } catch (signupError) {
-      setError(getApiErrorMessage(signupError, t.createFailed));
+      setError(
+        isDuplicateEmailError(signupError)
+          ? t.emailTaken
+          : getApiErrorMessage(signupError, t.createFailed)
+      );
     } finally {
       setIsSubmitting(false);
     }
