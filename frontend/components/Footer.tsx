@@ -42,18 +42,6 @@ export default function Footer() {
             <p className="mt-4 text-sm leading-relaxed text-primary-foreground/60 max-w-xs">
               {t.brandText}
             </p>
-            <div className="flex items-center gap-4 mt-6">
-              {[Instagram, Facebook, Twitter].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="text-primary-foreground/50 hover:text-primary-foreground transition-colors"
-                  aria-label="Social media"
-                >
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
           </div>
 
           {Object.entries(footerLinks).map(([title, links]) => (
