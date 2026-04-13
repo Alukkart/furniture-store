@@ -362,9 +362,9 @@ export default function CheckoutPage() {
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
-                      { key: "firstName", label: t.firstName, placeholder: "Имя", col: 1 },
-                      { key: "lastName", label: t.lastName, placeholder: "Фамилия", col: 1 },
-                      { key: "email", label: t.email, placeholder: "Почта", col: 2 },
+                      { key: "firstName", label: t.firstName, placeholder: "Иванов", col: 1 },
+                      { key: "lastName", label: t.lastName, placeholder: "Иван", col: 1 },
+                      { key: "email", label: t.email, placeholder: "ivan@mail.com", col: 2 },
                       { key: "phone", label: t.phone, placeholder: "+7999 999 99 99", col: 2 },
                     ].map((f) => (
                       <div key={f.key} className={f.col === 2 ? "sm:col-span-2" : ""}>
