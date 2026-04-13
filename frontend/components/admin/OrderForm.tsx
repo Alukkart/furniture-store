@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { adminText, translateOrderStatus } from "@/lib/admin-i18n";
 import type { Order, Product } from "@/lib/types";
@@ -200,7 +201,7 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {t.lineTotal}: ${(item.product.price * item.quantity).toLocaleString()}
+                  {t.lineTotal}: {formatPrice(item.product.price * item.quantity)}
                 </p>
               </div>
             ))}
@@ -210,10 +211,9 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
             <p className="text-sm text-muted-foreground">
               {t.orderTotal}
               <span className="ml-2 font-semibold text-foreground">
-                $
-                {order.items
-                  .reduce((total, item) => total + item.product.price * item.quantity, 0)
-                  .toLocaleString()}
+                {formatPrice(
+                  order.items.reduce((total, item) => total + item.product.price * item.quantity, 0)
+                )}
               </span>
             </p>
           </div>

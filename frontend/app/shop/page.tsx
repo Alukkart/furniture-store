@@ -1,11 +1,12 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useMemo, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { siteText, translateCategory } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
@@ -33,7 +34,8 @@ function ShopContent() {
   const [category, setCategory] = useState(initialCategory);
   const [sort, setSort] = useState("featured");
   const [saleOnly, setSaleOnly] = useState(initialSale);
-  const [maxPrice, setMaxPrice] = useState(5000);
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const sortOptions = [
     { value: "featured", label: t.featured },
@@ -42,12 +44,46 @@ function ShopContent() {
     { value: "name", label: t.name },
   ];
 
+  const priceBounds = useMemo(() => {
+    if (products.length === 0) {
+      return { min: 0, max: 0 };
+    }
+
+    return products.reduce(
+      (bounds, product) => ({
+        min: Math.min(bounds.min, product.price),
+        max: Math.max(bounds.max, product.price),
+      }),
+      { min: products[0].price, max: products[0].price }
+    );
+  }, [products]);
+
+  useEffect(() => {
+    if (products.length === 0) {
+      setMinPrice(null);
+      setMaxPrice(null);
+      return;
+    }
+
+    setMinPrice((current) => {
+      if (current === null) return priceBounds.min;
+      return Math.min(Math.max(current, priceBounds.min), priceBounds.max);
+    });
+    setMaxPrice((current) => {
+      if (current === null) return priceBounds.max;
+      return Math.max(Math.min(current, priceBounds.max), priceBounds.min);
+    });
+  }, [products.length, priceBounds.min, priceBounds.max]);
+
+  const selectedMinPrice = products.length === 0 ? 0 : Math.min(minPrice ?? priceBounds.min, maxPrice ?? priceBounds.max);
+  const selectedMaxPrice = products.length === 0 ? 0 : Math.max(maxPrice ?? priceBounds.max, minPrice ?? priceBounds.min);
+
   const filtered = useMemo(() => {
     let list = [...products];
 
     if (category !== "All") list = list.filter((p) => p.category === category);
     if (saleOnly) list = list.filter((p) => !!p.originalPrice);
-    list = list.filter((p) => p.price <= maxPrice);
+    list = list.filter((p) => p.price >= selectedMinPrice && p.price <= selectedMaxPrice);
 
     switch (sort) {
       case "price-asc":
@@ -66,7 +102,7 @@ function ShopContent() {
     }
 
     return list;
-  }, [products, category, sort, saleOnly, maxPrice]);
+  }, [products, category, sort, saleOnly, selectedMinPrice, selectedMaxPrice]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -118,19 +154,50 @@ function ShopContent() {
 
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-                    {t.maxPrice}
+                    {t.priceRange}
                   </h3>
-                  <input
-                    type="range"
-                    min={100}
-                    max={5000}
-                    step={100}
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                    className="w-full accent-accent"
-                  />
-                  <p className="text-sm font-medium text-foreground mt-2">
-                    {t.upTo} ${maxPrice.toLocaleString()}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground" htmlFor="shop-min-price">
+                        {t.minPrice}
+                      </label>
+                      <input
+                        id="shop-min-price"
+                        type="number"
+                        min={priceBounds.min}
+                        max={priceBounds.max}
+                        step={1}
+                        value={minPrice ?? ""}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          if (Number.isNaN(value)) return;
+                          setMinPrice(Math.min(Math.max(value, priceBounds.min), priceBounds.max));
+                        }}
+                        className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground" htmlFor="shop-max-price">
+                        {t.maxPrice}
+                      </label>
+                      <input
+                        id="shop-max-price"
+                        type="number"
+                        min={priceBounds.min}
+                        max={priceBounds.max}
+                        step={1}
+                        value={maxPrice ?? ""}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          if (Number.isNaN(value)) return;
+                          setMaxPrice(Math.min(Math.max(value, priceBounds.min), priceBounds.max));
+                        }}
+                        className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium text-foreground mt-3">
+                    {formatPrice(selectedMinPrice)} — {formatPrice(selectedMaxPrice)}
                   </p>
                 </div>
 
@@ -186,7 +253,8 @@ function ShopContent() {
                     onClick={() => {
                       setCategory("All");
                       setSaleOnly(false);
-                      setMaxPrice(5000);
+                      setMinPrice(priceBounds.min);
+                      setMaxPrice(priceBounds.max);
                     }}
                     className="mt-4 flex items-center gap-1.5 text-sm text-accent hover:underline"
                   >

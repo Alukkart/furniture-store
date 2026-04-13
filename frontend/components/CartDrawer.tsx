@@ -3,6 +3,7 @@
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { formatPrice } from "@/lib/currency";
 import { useStore } from "@/lib/store";
 import { usePreferences } from "@/lib/preferences";
 import { siteText, translateCategory } from "@/lib/i18n";
@@ -134,7 +135,7 @@ export default function CartDrawer({ open, onClose }: Props) {
                         </button>
                       </div>
                       <span className="font-semibold text-sm text-foreground">
-                        ${(item.product.price * item.quantity).toLocaleString()}
+                        {formatPrice(item.product.price * item.quantity)}
                       </span>
                     </div>
                   </div>
@@ -157,7 +158,7 @@ export default function CartDrawer({ open, onClose }: Props) {
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground text-sm">{t.subtotal}</span>
               <span className="font-semibold text-foreground">
-                ${subtotal.toLocaleString()}
+                {formatPrice(subtotal)}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">

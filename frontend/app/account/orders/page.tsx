@@ -15,6 +15,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/lib/auth";
+import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { siteText, translateCategory } from "@/lib/i18n";
 import type { Order } from "@/lib/types";
@@ -145,7 +146,7 @@ export default function AccountOrdersPage() {
               </div>
               <div className="rounded-xl border border-border p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">{t.totalSpent}</p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">${totalSpent.toLocaleString()}</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">{formatPrice(totalSpent)}</p>
               </div>
               <div className="rounded-xl border border-border p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">{t.latestOrder}</p>
@@ -248,7 +249,7 @@ export default function AccountOrdersPage() {
                     <div key={`${order.id}-${item.product.id}`} className="rounded-xl border border-border px-4 py-3 compact-aware">
                       <p className="font-medium text-foreground">{item.product.name}</p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {item.quantity} × ${item.product.price.toLocaleString()} · {translateCategory(locale, item.product.category)}
+                        {item.quantity} × {formatPrice(item.product.price)} · {translateCategory(locale, item.product.category)}
                       </p>
                     </div>
                   ))}
@@ -256,7 +257,7 @@ export default function AccountOrdersPage() {
 
                 <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
                   <p className="text-sm text-muted-foreground">{t.orderEmail}: {order.email}</p>
-                  <p className="text-lg font-semibold text-foreground">${order.total.toLocaleString()}</p>
+                  <p className="text-lg font-semibold text-foreground">{formatPrice(order.total)}</p>
                 </div>
               </article>
             ))

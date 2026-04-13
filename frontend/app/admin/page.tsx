@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
+import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { adminText, translateOrderStatus } from "@/lib/admin-i18n";
 import { useStore } from "@/lib/store";
@@ -62,7 +63,7 @@ export default function AdminDashboardPage() {
           {[
             {
               label: t.totalRevenue,
-              value: `$${stats.totalRevenue.toLocaleString()}`,
+              value: formatPrice(stats.totalRevenue),
               icon: DollarSign,
               change: "+12.5%",
               positive: true,
@@ -86,9 +87,9 @@ export default function AdminDashboardPage() {
             },
             {
               label: t.avgOrderValue,
-              value: `$${Math.round(
-                orders.reduce((s, o) => s + o.total, 0) / Math.max(orders.length, 1)
-              ).toLocaleString()}`,
+              value: formatPrice(
+                Math.round(orders.reduce((s, o) => s + o.total, 0) / Math.max(orders.length, 1))
+              ),
               icon: TrendingUp,
               change: "+8.2%",
               positive: true,
@@ -159,7 +160,7 @@ export default function AdminDashboardPage() {
                       {translateOrderStatus(locale, order.status)}
                     </span>
                     <span className="text-sm font-semibold text-foreground">
-                      ${order.total.toLocaleString()}
+                      {formatPrice(order.total)}
                     </span>
                   </div>
                 </div>

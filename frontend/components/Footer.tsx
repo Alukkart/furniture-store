@@ -18,21 +18,21 @@ export default function Footer() {
       { label: t.sale, href: "/shop?sale=true" },
     ],
     [t.company]: [
-      { label: t.about, href: "/" },
-      { label: t.sustainability, href: "/" },
-      { label: t.careers, href: "/" },
-      { label: t.press, href: "/" },
+      { label: t.about, href: "/info/about" },
+      { label: t.sustainability, href: "/info/sustainability" },
+      { label: t.careers, href: "/info/careers" },
+      { label: t.press, href: "/info/press" },
     ],
     [t.support]: [
-      { label: t.faq, href: "/" },
-      { label: t.shipping, href: "/" },
-      { label: t.careGuide, href: "/" },
-      { label: t.contact, href: "/" },
+      { label: t.faq, href: "/info/faq" },
+      { label: t.shipping, href: "/info/shipping" },
+      { label: t.careGuide, href: "/info/care" },
+      { label: t.contact, href: "/info/contact" },
     ],
   };
 
   return (
-    <footer className="bg-foreground text-primary-foreground mt-24">
+    <footer className="bg-foreground text-primary-foreground">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           <div className="lg:col-span-2">
@@ -65,45 +65,23 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 pt-10 border-t border-primary-foreground/10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <h3 className="font-serif text-lg font-semibold text-primary-foreground">
-                {t.stay}
-              </h3>
-              <p className="text-sm text-primary-foreground/60 mt-1">
-                {t.stayDesc}
-              </p>
-            </div>
-            <form className="flex gap-2 w-full md:w-auto">
-              <input
-                type="email"
-                placeholder={t.emailPlaceholder}
-                className="flex-1 md:w-64 px-4 py-2.5 bg-primary-foreground/10 border border-primary-foreground/20 rounded text-sm text-primary-foreground placeholder:text-primary-foreground/40 focus:outline-none focus:border-primary-foreground/40"
-              />
-              <button
-                type="submit"
-                className="px-5 py-2.5 bg-accent text-accent-foreground text-sm font-medium rounded hover:opacity-90 transition-opacity flex-shrink-0"
-              >
-                {t.subscribe}
-              </button>
-            </form>
-          </div>
-        </div>
-
         <div className="mt-8 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row justify-between gap-4">
           <p className="text-xs text-primary-foreground/40">
             © 2026 Maison & Co. {t.rights}
           </p>
           <div className="flex gap-6">
-            {[t.privacy, t.terms, t.cookies].map((item) => (
-              <a
-                key={item}
-                href="#"
+            {[
+              { label: t.privacy, href: "/info/privacy" },
+              { label: t.terms, href: "/info/terms" },
+              { label: t.cookies, href: "/info/cookies" },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
                 className="text-xs text-primary-foreground/40 hover:text-primary-foreground/70 transition-colors"
               >
-                {item}
-              </a>
+                {item.label}
+              </Link>
             ))}
           </div>
         </div>

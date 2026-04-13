@@ -8,9 +8,11 @@ import { Minus, Plus, ShoppingCart, Package, RotateCcw, Shield } from "lucide-re
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { formatPrice } from "@/lib/currency";
 import { useStore } from "@/lib/store";
-import { cn } from "../../../lib/utils";
-
+import { usePreferences } from "@/lib/preferences";
+import { siteText, translateCategory } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -19,6 +21,8 @@ export default function ProductPage({ params }: Props) {
   const products = useStore((s) => s.products);
   const isBootstrapping = useStore((s) => s.isBootstrapping);
   const addToCart = useStore((s) => s.addToCart);
+  const locale = usePreferences((s) => s.locale);
+  const t = siteText[locale].productPage;
   const product = products.find((p) => p.id === id);
 
   const [qty, setQty] = useState(1);
@@ -29,7 +33,7 @@ export default function ProductPage({ params }: Props) {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading product...</p>
+          <p className="text-muted-foreground">{t.loading}</p>
         </main>
         <Footer />
       </div>
@@ -42,9 +46,9 @@ export default function ProductPage({ params }: Props) {
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="font-serif text-3xl text-foreground mb-4">Product not found</p>
+            <p className="font-serif text-3xl text-foreground mb-4">{t.notFound}</p>
             <Link href="/shop" className="text-accent hover:underline">
-              Back to Shop
+              {t.backToShop}
             </Link>
           </div>
         </main>
@@ -77,18 +81,18 @@ export default function ProductPage({ params }: Props) {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <nav className="flex items-center gap-2 text-xs text-muted-foreground">
               <Link href="/" className="hover:text-foreground transition-colors">
-                Home
+                {t.home}
               </Link>
               <span>/</span>
               <Link href="/shop" className="hover:text-foreground transition-colors">
-                Shop
+                {t.shop}
               </Link>
               <span>/</span>
               <Link
                 href={`/shop?category=${product.category}`}
                 className="hover:text-foreground transition-colors"
               >
-                {product.category}
+                {translateCategory(locale, product.category)}
               </Link>
               <span>/</span>
               <span className="text-foreground font-medium truncate max-w-xs">
@@ -112,7 +116,7 @@ export default function ProductPage({ params }: Props) {
               />
               {product.originalPrice && (
                 <span className="absolute top-4 left-4 bg-accent text-accent-foreground text-sm font-semibold px-3 py-1.5 rounded">
-                  Save ${savings?.toLocaleString()}
+                  {t.save.replace("{amount}", formatPrice(savings ?? 0))}
                 </span>
               )}
             </div>
@@ -123,7 +127,7 @@ export default function ProductPage({ params }: Props) {
                 href={`/shop?category=${product.category}`}
                 className="text-xs uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors font-medium"
               >
-                {product.category}
+                {translateCategory(locale, product.category)}
               </Link>
               <h1 className="font-serif text-4xl font-bold text-foreground mt-2 leading-tight text-balance">
                 {product.name}
@@ -132,11 +136,11 @@ export default function ProductPage({ params }: Props) {
               {/* Price */}
               <div className="flex items-baseline gap-3 mt-4">
                 <span className="text-3xl font-bold text-foreground">
-                  ${product.price.toLocaleString()}
+                  {formatPrice(product.price)}
                 </span>
                 {product.originalPrice && (
                   <span className="text-xl text-muted-foreground line-through">
-                    ${product.originalPrice.toLocaleString()}
+                    {formatPrice(product.originalPrice)}
                   </span>
                 )}
               </div>
@@ -147,18 +151,18 @@ export default function ProductPage({ params }: Props) {
 
               {/* Specs */}
               <div className="mt-7 grid grid-cols-2 gap-3">
-                {[
-                  { label: "Dimensions", value: product.dimensions },
-                  { label: "Material", value: product.material },
-                  { label: "SKU", value: product.sku },
+                  {[
+                  { label: t.dimensions, value: product.dimensions },
+                  { label: t.material, value: product.material },
+                  { label: t.sku, value: product.sku },
                   {
-                    label: "Availability",
+                    label: t.details,
                     value:
                       product.stock > 5
-                        ? "In Stock"
+                        ? t.stock.replace("{count}", String(product.stock))
                         : product.stock > 0
-                        ? `Only ${product.stock} left`
-                        : "Out of Stock",
+                        ? siteText[locale].productCard.onlyLeft.replace("{count}", String(product.stock))
+                        : siteText[locale].productCard.outOfStock,
                   },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-muted rounded-lg px-4 py-3">
@@ -176,7 +180,7 @@ export default function ProductPage({ params }: Props) {
                   <button
                     onClick={() => setQty((q) => Math.max(1, q - 1))}
                     className="p-3 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="Decrease quantity"
+                    aria-label={siteText[locale].cart.decrease}
                   >
                     <Minus className="w-4 h-4" />
                   </button>
@@ -186,7 +190,7 @@ export default function ProductPage({ params }: Props) {
                   <button
                     onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
                     className="p-3 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="Increase quantity"
+                    aria-label={siteText[locale].cart.increase}
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -201,18 +205,18 @@ export default function ProductPage({ params }: Props) {
                       ? "bg-green-600 text-white"
                       : "bg-primary text-primary-foreground hover:opacity-90"
                   )}
-                >
+                  >
                   <ShoppingCart className="w-4 h-4" />
-                  {added ? "Added to Cart!" : "Add to Cart"}
+                  {added ? t.added : t.addToCart}
                 </button>
               </div>
 
               {/* Trust badges */}
               <div className="mt-8 pt-8 border-t border-border grid grid-cols-3 gap-4">
                 {[
-                  { icon: Package, label: "Free Delivery", sub: "Orders over $999" },
-                  { icon: RotateCcw, label: "30-Day Returns", sub: "Easy returns" },
-                  { icon: Shield, label: "10-Year Warranty", sub: "Solid wood" },
+                  { icon: Package, label: t.shippingTitle, sub: t.shippingText },
+                  { icon: RotateCcw, label: siteText[locale].home.perks.returns, sub: siteText[locale].home.perks.returnsDesc },
+                  { icon: Shield, label: t.warrantyTitle, sub: t.warrantyText },
                 ].map(({ icon: Icon, label, sub }) => (
                   <div key={label} className="flex flex-col items-center text-center gap-1.5">
                     <Icon className="w-5 h-5 text-accent" />
@@ -230,7 +234,7 @@ export default function ProductPage({ params }: Props) {
           <section className="bg-muted py-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="font-serif text-3xl font-bold text-foreground mb-8">
-                You May Also Like
+                {t.related}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {related.map((p) => (

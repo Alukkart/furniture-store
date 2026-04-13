@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { adminText } from "@/lib/admin-i18n";
 import { translateCategory } from "@/lib/i18n";
@@ -188,7 +189,7 @@ export default function ProductForm({ initialProduct, submitLabel, isSubmitting,
             <div className="mt-4 space-y-2 text-sm">
               <p className="font-medium text-foreground">{draft.name || t.untitled}</p>
               <p className="text-muted-foreground">{draft.category ? translateCategory(locale, draft.category) : t.noCategory}</p>
-              <p className="text-foreground">${previewPrice.toLocaleString()}</p>
+              <p className="text-foreground">{formatPrice(previewPrice)}</p>
               <p className="text-xs text-muted-foreground">{draft.image || t.noImage}</p>
             </div>
           </section>

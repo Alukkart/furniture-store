@@ -65,48 +65,6 @@ export default function HomePage() {
       desc: t.perks.curationDesc,
     },
   ];
-  const testimonials =
-    locale === "ru"
-      ? [
-          {
-            name: "Сара М.",
-            role: "Дизайнер интерьеров",
-            review:
-              "Диван Haven выглядит великолепно. Качество заметно выше всего, что я встречала в этом ценовом сегменте. Клиенты всегда остаются под впечатлением.",
-          },
-          {
-            name: "Джеймс Т.",
-            role: "Владелец дома",
-            review:
-              "Доставка прошла безупречно, а стол Strata приехал в идеальном состоянии. Качество материалов чувствуется сразу. Полностью оправдывает цену.",
-          },
-          {
-            name: "Елена Р.",
-            role: "Архитектор",
-            review:
-              "Я обставила уже три проекта мебелью Maison & Co., и клиенты остались очень довольны. Стабильное качество и команда, которой действительно не все равно.",
-          },
-        ]
-      : [
-          {
-            name: "Sarah M.",
-            role: "Interior Designer",
-            review:
-              "The Haven Sectional is absolutely stunning. The quality far exceeds anything I've found at a similar price point. My clients are always impressed.",
-          },
-          {
-            name: "James T.",
-            role: "Homeowner",
-            review:
-              "Delivery was seamless and the Strata dining table arrived in perfect condition. The craftsmanship is evident the moment you touch it. Worth every penny.",
-          },
-          {
-            name: "Elena R.",
-            role: "Architect",
-            review:
-              "I've furnished three projects with Maison & Co. pieces and my clients have never been happier. Consistent quality and a team that genuinely cares.",
-          },
-        ];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -284,35 +242,6 @@ export default function HomePage() {
                 {t.shopSale} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-          </div>
-        </section>
-
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center mb-12">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-2">
-              {t.testimonialsLead}
-            </p>
-            <h2 className="font-serif text-4xl font-bold text-foreground">
-              {t.testimonialsTitle}
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((entry) => (
-              <div key={entry.name} className="bg-card border border-border rounded-lg p-7">
-                <p className="text-foreground/80 leading-relaxed text-sm italic">
-                  "{entry.review}"
-                </p>
-                <div className="mt-6 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
-                    {entry.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-foreground">{entry.name}</p>
-                    <p className="text-xs text-muted-foreground">{entry.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </section>
       </main>

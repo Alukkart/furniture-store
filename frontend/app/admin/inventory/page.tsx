@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { useAuth } from "@/lib/auth";
+import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { adminText } from "@/lib/admin-i18n";
 import { translateCategory } from "@/lib/i18n";
@@ -123,7 +124,7 @@ export default function InventoryPage() {
             },
             {
               label: t.inventoryValue,
-              value: `$${totalValue.toLocaleString()}`,
+              value: formatPrice(totalValue),
               icon: Package,
               color: "bg-green-50 text-green-600",
             },
@@ -252,7 +253,7 @@ export default function InventoryPage() {
                           />
                         ) : (
                           <span className="font-semibold text-foreground">
-                            ${product.price.toLocaleString()}
+                            {formatPrice(product.price)}
                           </span>
                         )}
                       </td>

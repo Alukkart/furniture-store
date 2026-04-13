@@ -218,7 +218,7 @@ export const INITIAL_LOGS: AuditLog[] = [
     action: "Product Updated",
     category: "product",
     user: "admin@maison.co",
-    details: "Updated price of Haven Sectional Sofa from $2,499 to $2,199",
+    details: "Updated price of Haven Sectional Sofa from 2,499 ₽ to 2,199 ₽",
     timestamp: "2025-02-26T09:15:00Z",
     severity: "info",
   },

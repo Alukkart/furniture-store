@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Fragment, useState } from "react";
 import { Search, X, ChevronDown, ShoppingBag } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
+import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { adminText, translateOrderStatus } from "@/lib/admin-i18n";
 import { useStore, type Order } from "@/lib/store";
@@ -112,7 +113,7 @@ export default function OrdersPage() {
 
           <p className="text-sm text-muted-foreground ml-auto">
             {filtered.length} {filtered.length === 1 ? t.order : t.orders} · {t.revenue}:{" "}
-            <span className="font-semibold text-foreground">${totalRevenue.toLocaleString()}</span>
+            <span className="font-semibold text-foreground">{formatPrice(totalRevenue)}</span>
           </p>
         </div>
 
@@ -151,7 +152,7 @@ export default function OrdersPage() {
                       <td className="px-5 py-4 hidden lg:table-cell text-muted-foreground">
                         {new Date(order.date).toLocaleDateString(locale === "ru" ? "ru-RU" : "en-US")}
                       </td>
-                      <td className="px-5 py-4 font-semibold text-foreground">${order.total.toLocaleString()}</td>
+                      <td className="px-5 py-4 font-semibold text-foreground">{formatPrice(order.total)}</td>
                       <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                         <select
                           value={order.status}
@@ -201,11 +202,11 @@ export default function OrdersPage() {
                                     <div className="min-w-0">
                                       <p className="text-sm font-medium text-foreground truncate">{item.product.name}</p>
                                       <p className="text-xs text-muted-foreground">
-                                        {t.qty}: {item.quantity} · ${item.product.price.toLocaleString()} {t.each}
+                                        {t.qty}: {item.quantity} · {formatPrice(item.product.price)} {t.each}
                                       </p>
                                     </div>
                                     <p className="text-sm font-semibold text-foreground flex-shrink-0">
-                                      ${(item.product.price * item.quantity).toLocaleString()}
+                                      {formatPrice(item.product.price * item.quantity)}
                                     </p>
                                   </div>
                                 ))}
@@ -233,7 +234,7 @@ export default function OrdersPage() {
                                 </div>
                                 <div className="flex gap-2 pt-1 border-t border-border mt-1">
                                   <p className="text-xs text-muted-foreground w-20 flex-shrink-0">{t.total}</p>
-                                  <p className="text-xs font-bold text-foreground">${order.total.toLocaleString()}</p>
+                                  <p className="text-xs font-bold text-foreground">{formatPrice(order.total)}</p>
                                 </div>
                               </div>
                             </div>

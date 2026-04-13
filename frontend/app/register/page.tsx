@@ -24,16 +24,34 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).+$/;
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
-    if (!form.name.trim() || !form.email.trim() || !form.password) {
+    const normalizedName = form.name.trim().replace(/\s+/g, " ");
+    const normalizedEmail = form.email.trim().toLowerCase();
+
+    if (!normalizedName || !normalizedEmail || !form.password || !form.confirmPassword) {
       setError(t.required);
+      return;
+    }
+    if (normalizedName.split(" ").length < 2) {
+      setError(t.invalidName);
+      return;
+    }
+    if (!emailPattern.test(normalizedEmail)) {
+      setError(t.invalidEmail);
       return;
     }
     if (form.password.length < 6) {
       setError(t.passwordLength);
+      return;
+    }
+    if (!passwordPattern.test(form.password)) {
+      setError(t.passwordComplexity);
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -43,8 +61,8 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      await signupClient(form.email, form.password, form.name);
-      await login(form.email, form.password);
+      await signupClient(normalizedEmail, form.password, normalizedName);
+      await login(normalizedEmail, form.password);
       router.push("/account/orders");
     } catch (signupError) {
       setError(

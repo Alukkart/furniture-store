@@ -216,14 +216,14 @@ func seedProducts(db *gorm.DB) error {
 	}
 
 	products := []models.Product{
-		{ID: "p1", Name: "Haven Sectional Sofa", CategoryID: catID["Living Room"], Price: 2199, OriginalPrice: int64Ptr(2799), Image: "/images/prod-sofa-1.jpg", Description: "Premium sectional sofa", Dimensions: "W 280cm x D 180cm x H 86cm", Material: "Belgian Linen", StockQty: 12, SKU: "SOF-HVNS-BEI", IsActive: true, Featured: true, Rating: 4.8, Reviews: 124},
-		{ID: "p2", Name: "Aria Accent Chair", CategoryID: catID["Living Room"], Price: 649, Image: "/images/prod-chair-1.jpg", Description: "Accent chair", Dimensions: "W 76cm x D 82cm x H 84cm", Material: "Velvet", StockQty: 28, SKU: "CHR-ARIA-TER", IsActive: true, Featured: true, Rating: 4.7, Reviews: 89},
-		{ID: "p3", Name: "Strata Walnut Dining Table", CategoryID: catID["Dining Room"], Price: 1899, OriginalPrice: int64Ptr(2299), Image: "/images/prod-table-1.jpg", Description: "Walnut dining table", Dimensions: "W 200cm x D 95cm x H 76cm", Material: "Walnut", StockQty: 8, SKU: "TBL-STRW-WAL", IsActive: true, Featured: true, Rating: 4.9, Reviews: 56},
-		{ID: "p4", Name: "Cloud Platform Bed", CategoryID: catID["Bedroom"], Price: 1549, Image: "/images/prod-bed-1.jpg", Description: "Platform bed", Dimensions: "King", Material: "Linen", StockQty: 15, SKU: "BED-CLPL-CRM", IsActive: true, Featured: true, Rating: 4.9, Reviews: 201},
-		{ID: "p5", Name: "Lattice Oak Bookshelf", CategoryID: catID["Storage"], Price: 849, Image: "/images/prod-shelf-1.jpg", Description: "Bookshelf", Dimensions: "W 90cm", Material: "Oak", StockQty: 20, SKU: "SHF-LTOK-NAT", IsActive: true, Featured: false, Rating: 4.6, Reviews: 43},
-		{ID: "p6", Name: "Studio Writing Desk", CategoryID: catID["Home Office"], Price: 599, Image: "/images/prod-desk-1.jpg", Description: "Writing desk", Dimensions: "W 140cm", Material: "MDF", StockQty: 35, SKU: "DSK-STUD-WHT", IsActive: true, Featured: false, Rating: 4.5, Reviews: 67},
-		{ID: "p7", Name: "Soleil Brass Floor Lamp", CategoryID: catID["Lighting"], Price: 349, Image: "/images/prod-lamp-1.jpg", Description: "Floor lamp", Dimensions: "H 165cm", Material: "Brass", StockQty: 42, SKU: "LMP-SOLB-BRS", IsActive: true, Featured: false, Rating: 4.7, Reviews: 98},
-		{ID: "p8", Name: "Marrakesh Wool Rug", CategoryID: catID["Rugs & Textiles"], Price: 479, OriginalPrice: int64Ptr(599), Image: "/images/prod-rug-1.jpg", Description: "Wool rug", Dimensions: "250cm x 350cm", Material: "Wool", StockQty: 18, SKU: "RUG-MRKW-CRM", IsActive: true, Featured: false, Rating: 4.8, Reviews: 77},
+		{ID: "p1", Name: "Haven Sectional Sofa", CategoryID: catID["Living Room"], Price: 56990, OriginalPrice: int64Ptr(70000), Image: "/images/prod-sofa-1.jpg", Description: "Premium sectional sofa", Dimensions: "W 280cm x D 180cm x H 86cm", Material: "Belgian Linen", StockQty: 12, SKU: "SOF-HVNS-BEI", IsActive: true, Featured: true, Rating: 4.8, Reviews: 124},
+		{ID: "p2", Name: "Aria Accent Chair", CategoryID: catID["Living Room"], Price: 14990, Image: "/images/prod-chair-1.jpg", Description: "Accent chair", Dimensions: "W 76cm x D 82cm x H 84cm", Material: "Velvet", StockQty: 28, SKU: "CHR-ARIA-TER", IsActive: true, Featured: true, Rating: 4.7, Reviews: 89},
+		{ID: "p3", Name: "Strata Walnut Dining Table", CategoryID: catID["Dining Room"], Price: 4500, OriginalPrice: int64Ptr(6800), Image: "/images/prod-table-1.jpg", Description: "Walnut dining table", Dimensions: "W 200cm x D 95cm x H 76cm", Material: "Walnut", StockQty: 8, SKU: "TBL-STRW-WAL", IsActive: true, Featured: true, Rating: 4.9, Reviews: 56},
+		{ID: "p4", Name: "Cloud Platform Bed", CategoryID: catID["Bedroom"], Price: 66990, Image: "/images/prod-bed-1.jpg", Description: "Platform bed", Dimensions: "King", Material: "Linen", StockQty: 15, SKU: "BED-CLPL-CRM", IsActive: true, Featured: true, Rating: 4.9, Reviews: 201},
+		{ID: "p5", Name: "Lattice Oak Bookshelf", CategoryID: catID["Storage"], Price: 19990, Image: "/images/prod-shelf-1.jpg", Description: "Bookshelf", Dimensions: "W 90cm", Material: "Oak", StockQty: 20, SKU: "SHF-LTOK-NAT", IsActive: true, Featured: false, Rating: 4.6, Reviews: 43},
+		{ID: "p6", Name: "Studio Writing Desk", CategoryID: catID["Home Office"], Price: 5990, Image: "/images/prod-desk-1.jpg", Description: "Writing desk", Dimensions: "W 140cm", Material: "MDF", StockQty: 35, SKU: "DSK-STUD-WHT", IsActive: true, Featured: false, Rating: 4.5, Reviews: 67},
+		{ID: "p7", Name: "Soleil Brass Floor Lamp", CategoryID: catID["Lighting"], Price: 3800, Image: "/images/prod-lamp-1.jpg", Description: "Floor lamp", Dimensions: "H 165cm", Material: "Brass", StockQty: 42, SKU: "LMP-SOLB-BRS", IsActive: true, Featured: false, Rating: 4.7, Reviews: 98},
+		{ID: "p8", Name: "Marrakesh Wool Rug", CategoryID: catID["Rugs & Textiles"], Price: 6500, OriginalPrice: int64Ptr(8000), Image: "/images/prod-rug-1.jpg", Description: "Wool rug", Dimensions: "250cm x 350cm", Material: "Wool", StockQty: 18, SKU: "RUG-MRKW-CRM", IsActive: true, Featured: false, Rating: 4.8, Reviews: 77},
 	}
 
 	for i := range products {
@@ -243,11 +243,11 @@ func seedCustomersOrdersAndItems(db *gorm.DB) error {
 	}
 
 	customers := []models.Customer{
-		{ID: "c1", FullName: "Sarah Mitchell", Phone: "+1-555-0101", Email: "s.mitchell@email.com"},
-		{ID: "c2", FullName: "James Thornton", Phone: "+1-555-0102", Email: "j.thornton@email.com"},
-		{ID: "c3", FullName: "Elena Rossi", Phone: "+1-555-0103", Email: "e.rossi@email.com"},
-		{ID: "c4", FullName: "Marcus Webb", Phone: "+1-555-0104", Email: "m.webb@email.com"},
-		{ID: "c5", FullName: "Priya Sharma", Phone: "+1-555-0105", Email: "p.sharma@email.com"},
+		{ID: "c1", FullName: "Цветков Макар", Phone: "+79185134859", Email: "ice_o@yandex.ru"},
+		{ID: "c2", FullName: "Суворова Зинаида", Phone: "+79406551717", Email: "tiger@yandex.ru"},
+		{ID: "c3", FullName: "Белоусова Любовь", Phone: "+79393568539", Email: "zeus@yandex.ru"},
+		{ID: "c4", FullName: "Медведева Анастасия", Phone: "+79624388906", Email: "apoll@yandex.ru"},
+		{ID: "c5", FullName: "Власов Валентин", Phone: "+79542700049", Email: "drago@yandex.ru"},
 	}
 	for _, c := range customers {
 		item := c

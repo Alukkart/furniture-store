@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { formatPrice } from "@/lib/currency";
 import { useStore, type Product } from "@/lib/store";
 import { usePreferences } from "@/lib/preferences";
 import { siteText, translateCategory } from "@/lib/i18n";
@@ -57,11 +58,11 @@ export default function ProductCard({ product, className }: Props) {
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-semibold text-foreground">
-              ${product.price.toLocaleString()}
+              {formatPrice(product.price)}
             </span>
             {product.originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                ${product.originalPrice.toLocaleString()}
+                {formatPrice(product.originalPrice)}
               </span>
             )}
           </div>
