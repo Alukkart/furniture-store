@@ -6,6 +6,7 @@ import { ArrowRight, Star, Truck, RotateCcw, Shield } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { normalizeCategoryValue } from "@/lib/categories";
 import { usePreferences } from "@/lib/preferences";
 import { siteText, translateCategory } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
@@ -14,25 +15,21 @@ const categories = [
   {
     name: "Living Room",
     image: "/images/cat-living.jpg",
-    count: 24,
     href: "/shop?category=Living Room",
   },
   {
     name: "Bedroom",
     image: "/images/cat-bedroom.jpg",
-    count: 18,
     href: "/shop?category=Bedroom",
   },
   {
     name: "Dining Room",
     image: "/images/cat-dining.jpg",
-    count: 15,
     href: "/shop?category=Dining Room",
   },
   {
     name: "Home Office",
     image: "/images/cat-office.jpg",
-    count: 12,
     href: "/shop?category=Home Office",
   },
 ];
@@ -43,6 +40,13 @@ export default function HomePage() {
   const locale = usePreferences((s) => s.locale);
   const t = siteText[locale].home;
   const featuredProducts = products.filter((p) => p.featured);
+  const categoriesWithCount = categories.map((category) => ({
+    ...category,
+    count: products.filter(
+      (product) =>
+        normalizeCategoryValue(product.category) === normalizeCategoryValue(category.name)
+    ).length,
+  }));
   const perks = [
     {
       icon: Truck,
@@ -148,7 +152,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {categories.map((cat) => (
+            {categoriesWithCount.map((cat) => (
               <Link
                 key={cat.name}
                 href={cat.href}

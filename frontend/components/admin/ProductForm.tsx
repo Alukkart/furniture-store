@@ -1,21 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CATEGORY_VALUES } from "@/lib/categories";
 import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { adminText } from "@/lib/admin-i18n";
 import { translateCategory } from "@/lib/i18n";
 import type { Product } from "@/lib/types";
 
-const CATEGORY_OPTIONS = [
-  "Living Room",
-  "Bedroom",
-  "Dining Room",
-  "Home Office",
-  "Storage",
-  "Lighting",
-  "Rugs & Textiles",
-];
+const CATEGORY_OPTIONS = [...CATEGORY_VALUES];
 
 type ProductDraft = {
   id: string;

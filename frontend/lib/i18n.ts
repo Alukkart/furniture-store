@@ -1,30 +1,32 @@
 import type { SiteLocale } from "./preferences";
+import { normalizeCategoryValue } from "./categories";
 
 export const categoryLabels: Record<SiteLocale, Record<string, string>> = {
   en: {
     "All": "All",
-    "Living Room": "Living Room",
-    "Bedroom": "Bedroom",
-    "Dining Room": "Dining Room",
-    "Home Office": "Home Office",
-    "Storage": "Storage",
-    "Lighting": "Lighting",
-    "Rugs & Textiles": "Rugs & Textiles",
+    "Гостиная": "Living Room",
+    "Спальня": "Bedroom",
+    "Столовая": "Dining Room",
+    "Домашний офис": "Home Office",
+    "Хранение": "Storage",
+    "Освещение": "Lighting",
+    "Ковры и текстиль": "Rugs & Textiles",
   },
   ru: {
     "All": "Все",
-    "Living Room": "Гостиная",
-    "Bedroom": "Спальня",
-    "Dining Room": "Столовая",
-    "Home Office": "Домашний офис",
-    "Storage": "Хранение",
-    "Lighting": "Освещение",
-    "Rugs & Textiles": "Ковры и текстиль",
+    "Гостиная": "Гостиная",
+    "Спальня": "Спальня",
+    "Столовая": "Столовая",
+    "Домашний офис": "Домашний офис",
+    "Хранение": "Хранение",
+    "Освещение": "Освещение",
+    "Ковры и текстиль": "Ковры и текстиль",
   },
 };
 
 export function translateCategory(locale: SiteLocale, value: string) {
-  return categoryLabels[locale][value] ?? value;
+  const normalized = normalizeCategoryValue(value);
+  return categoryLabels[locale][normalized] ?? value;
 }
 
 export const siteText = {

@@ -6,33 +6,37 @@ import { SlidersHorizontal, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { CATEGORY_VALUES, normalizeCategoryValue } from "@/lib/categories";
 import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { siteText, translateCategory } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 
-const CATEGORIES = [
-  "All",
-  "Living Room",
-  "Bedroom",
-  "Dining Room",
-  "Home Office",
-  "Storage",
-  "Lighting",
-  "Rugs & Textiles",
-];
+const CATEGORIES = ["All", ...CATEGORY_VALUES];
+const SORT_VALUES = ["featured", "price-asc", "price-desc", "name"] as const;
+
+function normalizeSortValue(value: string | null) {
+  return SORT_VALUES.includes((value ?? "") as (typeof SORT_VALUES)[number])
+    ? (value as (typeof SORT_VALUES)[number])
+    : "featured";
+}
+
+function clampPrice(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
 
 function ShopContent() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get("category") || "All";
+  const initialCategory = normalizeCategoryValue(searchParams.get("category") || "All");
   const initialSale = searchParams.get("sale") === "true";
+  const initialSort = normalizeSortValue(searchParams.get("sort"));
 
   const products = useStore((s) => s.products);
   const isBootstrapping = useStore((s) => s.isBootstrapping);
   const locale = usePreferences((s) => s.locale);
   const t = siteText[locale].shop;
   const [category, setCategory] = useState(initialCategory);
-  const [sort, setSort] = useState("featured");
+  const [sort, setSort] = useState<(typeof SORT_VALUES)[number]>(initialSort);
   const [saleOnly, setSaleOnly] = useState(initialSale);
   const [minPrice, setMinPrice] = useState<number | null>(null);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
@@ -59,21 +63,36 @@ function ShopContent() {
   }, [products]);
 
   useEffect(() => {
+    const nextCategory = normalizeCategoryValue(searchParams.get("category") || "All");
+    const nextSaleOnly = searchParams.get("sale") === "true";
+    const nextSort = normalizeSortValue(searchParams.get("sort"));
+
+    setCategory(nextCategory);
+    setSaleOnly(nextSaleOnly);
+    setSort(nextSort);
+
     if (products.length === 0) {
       setMinPrice(null);
       setMaxPrice(null);
       return;
     }
 
-    setMinPrice((current) => {
-      if (current === null) return priceBounds.min;
-      return Math.min(Math.max(current, priceBounds.min), priceBounds.max);
-    });
-    setMaxPrice((current) => {
-      if (current === null) return priceBounds.max;
-      return Math.max(Math.min(current, priceBounds.max), priceBounds.min);
-    });
-  }, [products.length, priceBounds.min, priceBounds.max]);
+    const rawMinPrice = searchParams.get("minPrice");
+    const rawMaxPrice = searchParams.get("maxPrice");
+    const parsedMinPrice = rawMinPrice === null ? null : Number(rawMinPrice);
+    const parsedMaxPrice = rawMaxPrice === null ? null : Number(rawMaxPrice);
+
+    setMinPrice(
+      parsedMinPrice !== null && !Number.isNaN(parsedMinPrice)
+        ? clampPrice(parsedMinPrice, priceBounds.min, priceBounds.max)
+        : priceBounds.min
+    );
+    setMaxPrice(
+      parsedMaxPrice !== null && !Number.isNaN(parsedMaxPrice)
+        ? clampPrice(parsedMaxPrice, priceBounds.min, priceBounds.max)
+        : priceBounds.max
+    );
+  }, [searchParams, products.length, priceBounds.min, priceBounds.max]);
 
   const selectedMinPrice = products.length === 0 ? 0 : Math.min(minPrice ?? priceBounds.min, maxPrice ?? priceBounds.max);
   const selectedMaxPrice = products.length === 0 ? 0 : Math.max(maxPrice ?? priceBounds.max, minPrice ?? priceBounds.min);
@@ -81,7 +100,9 @@ function ShopContent() {
   const filtered = useMemo(() => {
     let list = [...products];
 
-    if (category !== "All") list = list.filter((p) => p.category === category);
+    if (category !== "All") {
+      list = list.filter((p) => normalizeCategoryValue(p.category) === normalizeCategoryValue(category));
+    }
     if (saleOnly) list = list.filter((p) => !!p.originalPrice);
     list = list.filter((p) => p.price >= selectedMinPrice && p.price <= selectedMaxPrice);
 
@@ -196,9 +217,6 @@ function ShopContent() {
                       />
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-foreground mt-3">
-                    {formatPrice(selectedMinPrice)} — {formatPrice(selectedMaxPrice)}
-                  </p>
                 </div>
 
                 <div>
@@ -229,7 +247,7 @@ function ShopContent() {
                 </button>
                 <select
                   value={sort}
-                  onChange={(e) => setSort(e.target.value)}
+                  onChange={(e) => setSort(normalizeSortValue(e.target.value))}
                   className="ml-auto bg-card border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   {sortOptions.map((opt) => (

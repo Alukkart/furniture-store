@@ -4,11 +4,44 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"backend/internal/models"
 
 	"gorm.io/gorm"
+)
+
+var (
+	seedAdminUserID     = seedID("u", "2025-01-10T09:00:00Z")
+	seedManagerUserID   = seedID("u", "2025-01-10T09:15:00Z")
+	seedWarehouseUserID = seedID("u", "2025-01-10T09:30:00Z")
+	seedExecutiveUserID = seedID("u", "2025-01-10T09:45:00Z")
+
+	seedSofaProductID      = seedID("p", "2025-02-01T08:00:00Z")
+	seedChairProductID     = seedID("p", "2025-02-01T08:10:00Z")
+	seedTableProductID     = seedID("p", "2025-02-01T08:20:00Z")
+	seedBedProductID       = seedID("p", "2025-02-01T08:30:00Z")
+	seedBookshelfProductID = seedID("p", "2025-02-01T08:40:00Z")
+	seedDeskProductID      = seedID("p", "2025-02-01T08:50:00Z")
+	seedLampProductID      = seedID("p", "2025-02-01T09:00:00Z")
+	seedRugProductID       = seedID("p", "2025-02-01T09:10:00Z")
+
+	seedCustomer1ID = seedID("c", "2025-02-12T10:00:00Z")
+	seedCustomer2ID = seedID("c", "2025-02-12T10:10:00Z")
+	seedCustomer3ID = seedID("c", "2025-02-12T10:20:00Z")
+	seedCustomer4ID = seedID("c", "2025-02-12T10:30:00Z")
+	seedCustomer5ID = seedID("c", "2025-02-12T10:40:00Z")
+
+	seedOrder1ID = seedID("ORD", "2025-02-15T10:30:00Z")
+	seedOrder2ID = seedID("ORD", "2025-02-18T14:15:00Z")
+	seedOrder3ID = seedID("ORD", "2025-02-20T09:00:00Z")
+	seedOrder4ID = seedID("ORD", "2025-02-21T16:45:00Z")
+	seedOrder5ID = seedID("ORD", "2025-02-22T11:20:00Z")
+
+	seedAuditLog1ID = seedID("log", "2025-02-26T09:15:00Z")
+	seedAuditLog2ID = seedID("log", "2025-02-26T10:30:00Z")
+	seedAuditLog3ID = seedID("log", "2025-02-23T03:15:00Z")
 )
 
 func seed(db *gorm.DB) error {
@@ -63,10 +96,10 @@ func seedRolesAndUsers(db *gorm.DB) error {
 	}
 
 	users := []models.User{
-		{ID: "u-admin", Email: "admin@maison.co", Name: "Admin", RoleID: roleID[models.RoleAdmin], PasswordHash: hashPassword("admin123"), IsBlocked: false},
-		{ID: "u-manager", Email: "manager@maison.co", Name: "Manager", RoleID: roleID[models.RoleManager], PasswordHash: hashPassword("manager123"), IsBlocked: false},
-		{ID: "u-warehouse", Email: "warehouse@maison.co", Name: "Warehouse", RoleID: roleID[models.RoleWarehouse], PasswordHash: hashPassword("warehouse123"), IsBlocked: false},
-		{ID: "u-executive", Email: "executive@maison.co", Name: "Executive", RoleID: roleID[models.RoleExecutive], PasswordHash: hashPassword("executive123"), IsBlocked: false},
+		{ID: seedAdminUserID, Email: "admin@mebel-dom.ru", Name: "Администратор", RoleID: roleID[models.RoleAdmin], PasswordHash: hashPassword("admin123"), IsBlocked: false},
+		{ID: seedManagerUserID, Email: "manager@mebel-dom.ru", Name: "Менеджер", RoleID: roleID[models.RoleManager], PasswordHash: hashPassword("manager123"), IsBlocked: false},
+		{ID: seedWarehouseUserID, Email: "warehouse@mebel-dom.ru", Name: "Кладовщик", RoleID: roleID[models.RoleWarehouse], PasswordHash: hashPassword("warehouse123"), IsBlocked: false},
+		{ID: seedExecutiveUserID, Email: "executive@mebel-dom.ru", Name: "Руководитель", RoleID: roleID[models.RoleExecutive], PasswordHash: hashPassword("executive123"), IsBlocked: false},
 	}
 
 	for _, user := range users {
@@ -79,7 +112,7 @@ func seedRolesAndUsers(db *gorm.DB) error {
 }
 
 func seedCategories(db *gorm.DB) error {
-	categories := []string{"Living Room", "Dining Room", "Bedroom", "Storage", "Home Office", "Lighting", "Rugs & Textiles"}
+	categories := []string{"Гостиная", "Столовая", "Спальня", "Хранение", "Домашний офис", "Освещение", "Ковры и текстиль"}
 	for _, name := range categories {
 		category := models.Category{Name: name}
 		if err := db.Where("name = ?", name).FirstOrCreate(&category).Error; err != nil {
@@ -91,21 +124,21 @@ func seedCategories(db *gorm.DB) error {
 
 func seedPermissions(db *gorm.DB) error {
 	permissions := []models.Permission{
-		{Action: "create", Resource: "user", Effect: "allow", Description: "Create internal and client accounts"},
-		{Action: "read", Resource: "user", Effect: "allow", Description: "Read users and client profiles"},
-		{Action: "block", Resource: "user", Effect: "allow", Description: "Block or unblock users"},
-		{Action: "create", Resource: "product", Effect: "allow", Description: "Create catalog products"},
-		{Action: "read", Resource: "product", Effect: "allow", Description: "Read catalog products"},
-		{Action: "update", Resource: "product", Effect: "allow", Description: "Update catalog products"},
-		{Action: "delete", Resource: "product", Effect: "allow", Description: "Delete catalog products"},
-		{Action: "create", Resource: "order", Effect: "allow", Description: "Place orders"},
-		{Action: "read", Resource: "order", Effect: "allow", Description: "Read orders"},
-		{Action: "update", Resource: "order", Effect: "allow", Description: "Update order details"},
-		{Action: "status", Resource: "order", Effect: "allow", Description: "Change order status"},
-		{Action: "read", Resource: "audit_log", Effect: "allow", Description: "Read audit log"},
-		{Action: "create", Resource: "audit_log", Effect: "allow", Description: "Create audit entries"},
-		{Action: "train", Resource: "forecast", Effect: "allow", Description: "Train forecast model"},
-		{Action: "read", Resource: "forecast", Effect: "allow", Description: "Read forecast results"},
+		{Action: "create", Resource: "user", Effect: "allow", Description: "Создание внутренних и клиентских аккаунтов"},
+		{Action: "read", Resource: "user", Effect: "allow", Description: "Просмотр пользователей и профилей клиентов"},
+		{Action: "block", Resource: "user", Effect: "allow", Description: "Блокировка и разблокировка пользователей"},
+		{Action: "create", Resource: "product", Effect: "allow", Description: "Добавление товаров в каталог"},
+		{Action: "read", Resource: "product", Effect: "allow", Description: "Просмотр каталога товаров"},
+		{Action: "update", Resource: "product", Effect: "allow", Description: "Редактирование карточек товаров"},
+		{Action: "delete", Resource: "product", Effect: "allow", Description: "Удаление товаров из каталога"},
+		{Action: "create", Resource: "order", Effect: "allow", Description: "Оформление заказов"},
+		{Action: "read", Resource: "order", Effect: "allow", Description: "Просмотр заказов"},
+		{Action: "update", Resource: "order", Effect: "allow", Description: "Редактирование данных заказа"},
+		{Action: "status", Resource: "order", Effect: "allow", Description: "Изменение статуса заказа"},
+		{Action: "read", Resource: "audit_log", Effect: "allow", Description: "Просмотр журнала аудита"},
+		{Action: "create", Resource: "audit_log", Effect: "allow", Description: "Создание записей аудита"},
+		{Action: "train", Resource: "forecast", Effect: "allow", Description: "Обучение модели прогноза"},
+		{Action: "read", Resource: "forecast", Effect: "allow", Description: "Просмотр результатов прогноза"},
 	}
 
 	for _, permission := range permissions {
@@ -182,11 +215,11 @@ func seedPermissions(db *gorm.DB) error {
 
 func seedOrderStatuses(db *gorm.DB) error {
 	statuses := []models.OrderStatusRef{
-		{Code: string(models.OrderStatusPending), Name: "Pending", SortOrder: 10},
-		{Code: string(models.OrderStatusProcessing), Name: "Processing", SortOrder: 20},
-		{Code: string(models.OrderStatusShipped), Name: "Shipped", SortOrder: 30},
-		{Code: string(models.OrderStatusDelivered), Name: "Delivered", SortOrder: 40},
-		{Code: string(models.OrderStatusCancelled), Name: "Cancelled", SortOrder: 50},
+		{Code: string(models.OrderStatusPending), Name: "Ожидает обработки", SortOrder: 10},
+		{Code: string(models.OrderStatusProcessing), Name: "В обработке", SortOrder: 20},
+		{Code: string(models.OrderStatusShipped), Name: "Передан в доставку", SortOrder: 30},
+		{Code: string(models.OrderStatusDelivered), Name: "Доставлен", SortOrder: 40},
+		{Code: string(models.OrderStatusCancelled), Name: "Отменён", SortOrder: 50},
 	}
 	for _, st := range statuses {
 		item := st
@@ -216,14 +249,14 @@ func seedProducts(db *gorm.DB) error {
 	}
 
 	products := []models.Product{
-		{ID: "p1", Name: "Haven Sectional Sofa", CategoryID: catID["Living Room"], Price: 56990, OriginalPrice: int64Ptr(70000), Image: "/images/prod-sofa-1.jpg", Description: "Premium sectional sofa", Dimensions: "W 280cm x D 180cm x H 86cm", Material: "Belgian Linen", StockQty: 12, SKU: "SOF-HVNS-BEI", IsActive: true, Featured: true, Rating: 4.8, Reviews: 124},
-		{ID: "p2", Name: "Aria Accent Chair", CategoryID: catID["Living Room"], Price: 14990, Image: "/images/prod-chair-1.jpg", Description: "Accent chair", Dimensions: "W 76cm x D 82cm x H 84cm", Material: "Velvet", StockQty: 28, SKU: "CHR-ARIA-TER", IsActive: true, Featured: true, Rating: 4.7, Reviews: 89},
-		{ID: "p3", Name: "Strata Walnut Dining Table", CategoryID: catID["Dining Room"], Price: 4500, OriginalPrice: int64Ptr(6800), Image: "/images/prod-table-1.jpg", Description: "Walnut dining table", Dimensions: "W 200cm x D 95cm x H 76cm", Material: "Walnut", StockQty: 8, SKU: "TBL-STRW-WAL", IsActive: true, Featured: true, Rating: 4.9, Reviews: 56},
-		{ID: "p4", Name: "Cloud Platform Bed", CategoryID: catID["Bedroom"], Price: 66990, Image: "/images/prod-bed-1.jpg", Description: "Platform bed", Dimensions: "King", Material: "Linen", StockQty: 15, SKU: "BED-CLPL-CRM", IsActive: true, Featured: true, Rating: 4.9, Reviews: 201},
-		{ID: "p5", Name: "Lattice Oak Bookshelf", CategoryID: catID["Storage"], Price: 19990, Image: "/images/prod-shelf-1.jpg", Description: "Bookshelf", Dimensions: "W 90cm", Material: "Oak", StockQty: 20, SKU: "SHF-LTOK-NAT", IsActive: true, Featured: false, Rating: 4.6, Reviews: 43},
-		{ID: "p6", Name: "Studio Writing Desk", CategoryID: catID["Home Office"], Price: 5990, Image: "/images/prod-desk-1.jpg", Description: "Writing desk", Dimensions: "W 140cm", Material: "MDF", StockQty: 35, SKU: "DSK-STUD-WHT", IsActive: true, Featured: false, Rating: 4.5, Reviews: 67},
-		{ID: "p7", Name: "Soleil Brass Floor Lamp", CategoryID: catID["Lighting"], Price: 3800, Image: "/images/prod-lamp-1.jpg", Description: "Floor lamp", Dimensions: "H 165cm", Material: "Brass", StockQty: 42, SKU: "LMP-SOLB-BRS", IsActive: true, Featured: false, Rating: 4.7, Reviews: 98},
-		{ID: "p8", Name: "Marrakesh Wool Rug", CategoryID: catID["Rugs & Textiles"], Price: 6500, OriginalPrice: int64Ptr(8000), Image: "/images/prod-rug-1.jpg", Description: "Wool rug", Dimensions: "250cm x 350cm", Material: "Wool", StockQty: 18, SKU: "RUG-MRKW-CRM", IsActive: true, Featured: false, Rating: 4.8, Reviews: 77},
+		{ID: seedSofaProductID, Name: "Модульный диван «Гавань»", CategoryID: catID["Гостиная"], Price: 56990, OriginalPrice: int64Ptr(70000), Image: "/images/prod-sofa-1.jpg", Description: "Просторный модульный диван для гостиной с мягкой глубокой посадкой", Dimensions: "Ш 280 см × Г 180 см × В 86 см", Material: "Бельгийский лён", StockQty: 12, SKU: "SOF-HVNS-BEI", IsActive: true, Featured: true, Rating: 4.8, Reviews: 124},
+		{ID: seedChairProductID, Name: "Акцентное кресло «Ария»", CategoryID: catID["Гостиная"], Price: 14990, Image: "/images/prod-chair-1.jpg", Description: "Мягкое кресло для зоны отдыха или чтения", Dimensions: "Ш 76 см × Г 82 см × В 84 см", Material: "Велюр", StockQty: 28, SKU: "CHR-ARIA-TER", IsActive: true, Featured: true, Rating: 4.7, Reviews: 89},
+		{ID: seedTableProductID, Name: "Обеденный стол «Страта» из ореха", CategoryID: catID["Столовая"], Price: 4500, OriginalPrice: int64Ptr(6800), Image: "/images/prod-table-1.jpg", Description: "Обеденный стол из натурального ореха для семьи из 6–8 человек", Dimensions: "Ш 200 см × Г 95 см × В 76 см", Material: "Массив ореха", StockQty: 8, SKU: "TBL-STRW-WAL", IsActive: true, Featured: true, Rating: 4.9, Reviews: 56},
+		{ID: seedBedProductID, Name: "Кровать-платформа «Облако»", CategoryID: catID["Спальня"], Price: 66990, Image: "/images/prod-bed-1.jpg", Description: "Кровать с мягким изголовьем и устойчивым основанием", Dimensions: "King Size", Material: "Лён", StockQty: 15, SKU: "BED-CLPL-CRM", IsActive: true, Featured: true, Rating: 4.9, Reviews: 201},
+		{ID: seedBookshelfProductID, Name: "Стеллаж «Латтис» из дуба", CategoryID: catID["Хранение"], Price: 19990, Image: "/images/prod-shelf-1.jpg", Description: "Открытый дубовый стеллаж для книг и декора", Dimensions: "Ш 90 см", Material: "Дуб", StockQty: 20, SKU: "SHF-LTOK-NAT", IsActive: true, Featured: false, Rating: 4.6, Reviews: 43},
+		{ID: seedDeskProductID, Name: "Письменный стол «Студио»", CategoryID: catID["Домашний офис"], Price: 5990, Image: "/images/prod-desk-1.jpg", Description: "Компактный письменный стол для домашнего кабинета", Dimensions: "Ш 140 см", Material: "МДФ", StockQty: 35, SKU: "DSK-STUD-WHT", IsActive: true, Featured: false, Rating: 4.5, Reviews: 67},
+		{ID: seedLampProductID, Name: "Торшер «Солей»", CategoryID: catID["Освещение"], Price: 3800, Image: "/images/prod-lamp-1.jpg", Description: "Напольный светильник с тёплым рассеянным светом", Dimensions: "В 165 см", Material: "Латунь", StockQty: 42, SKU: "LMP-SOLB-BRS", IsActive: true, Featured: false, Rating: 4.7, Reviews: 98},
+		{ID: seedRugProductID, Name: "Шерстяной ковёр «Марракеш»", CategoryID: catID["Ковры и текстиль"], Price: 6500, OriginalPrice: int64Ptr(8000), Image: "/images/prod-rug-1.jpg", Description: "Плотный шерстяной ковёр с геометрическим орнаментом", Dimensions: "250 см × 350 см", Material: "Шерсть", StockQty: 18, SKU: "RUG-MRKW-CRM", IsActive: true, Featured: false, Rating: 4.8, Reviews: 77},
 	}
 
 	for i := range products {
@@ -243,11 +276,11 @@ func seedCustomersOrdersAndItems(db *gorm.DB) error {
 	}
 
 	customers := []models.Customer{
-		{ID: "c1", FullName: "Цветков Макар", Phone: "+79185134859", Email: "ice_o@yandex.ru"},
-		{ID: "c2", FullName: "Суворова Зинаида", Phone: "+79406551717", Email: "tiger@yandex.ru"},
-		{ID: "c3", FullName: "Белоусова Любовь", Phone: "+79393568539", Email: "zeus@yandex.ru"},
-		{ID: "c4", FullName: "Медведева Анастасия", Phone: "+79624388906", Email: "apoll@yandex.ru"},
-		{ID: "c5", FullName: "Власов Валентин", Phone: "+79542700049", Email: "drago@yandex.ru"},
+		{ID: seedCustomer1ID, FullName: "Илья Соколов", Phone: "+7 916 245-18-37", Email: "i.sokolov@yandex.ru"},
+		{ID: seedCustomer2ID, FullName: "Мария Романова", Phone: "+7 921 334-72-18", Email: "m.romanova@mail.ru"},
+		{ID: seedCustomer3ID, FullName: "Артём Ковалёв", Phone: "+7 903 118-44-29", Email: "art.kovalev@yandex.ru"},
+		{ID: seedCustomer4ID, FullName: "Екатерина Смирнова", Phone: "+7 965 807-11-56", Email: "ek.smirnova@mail.ru"},
+		{ID: seedCustomer5ID, FullName: "Дмитрий Воробьёв", Phone: "+7 981 440-63-90", Email: "d.vorobev@yandex.ru"},
 	}
 	for _, c := range customers {
 		item := c
@@ -262,11 +295,11 @@ func seedCustomersOrdersAndItems(db *gorm.DB) error {
 	}
 
 	orders := []models.Order{
-		{ID: "ORD-2025-001", CustomerID: "c1", StatusID: statusByCode[string(models.OrderStatusDelivered)].ID, TotalSum: 3497, Address: "14 Oak Lane, San Francisco, CA 94102", CreatedAt: parseTime("2025-02-15T10:30:00Z")},
-		{ID: "ORD-2025-002", CustomerID: "c2", StatusID: statusByCode[string(models.OrderStatusShipped)].ID, TotalSum: 1899, Address: "88 Maple Street, Brooklyn, NY 11201", CreatedAt: parseTime("2025-02-18T14:15:00Z")},
-		{ID: "ORD-2025-003", CustomerID: "c3", StatusID: statusByCode[string(models.OrderStatusProcessing)].ID, TotalSum: 1898, Address: "201 Birch Ave, Austin, TX 78701", CreatedAt: parseTime("2025-02-20T09:00:00Z")},
-		{ID: "ORD-2025-004", CustomerID: "c4", StatusID: statusByCode[string(models.OrderStatusPending)].ID, TotalSum: 1328, Address: "55 Pine Road, Denver, CO 80203", CreatedAt: parseTime("2025-02-21T16:45:00Z")},
-		{ID: "ORD-2025-005", CustomerID: "c5", StatusID: statusByCode[string(models.OrderStatusCancelled)].ID, TotalSum: 1198, Address: "99 Elm Street, Chicago, IL 60601", CreatedAt: parseTime("2025-02-22T11:20:00Z")},
+		{ID: seedOrder1ID, CustomerID: seedCustomer1ID, StatusID: statusByCode[string(models.OrderStatusDelivered)].ID, TotalSum: 3497, Address: "г. Москва, Ленинский проспект, д. 62, кв. 41", CreatedAt: parseTime("2025-02-15T10:30:00Z")},
+		{ID: seedOrder2ID, CustomerID: seedCustomer2ID, StatusID: statusByCode[string(models.OrderStatusShipped)].ID, TotalSum: 1899, Address: "г. Санкт-Петербург, ул. Типанова, д. 14, кв. 87", CreatedAt: parseTime("2025-02-18T14:15:00Z")},
+		{ID: seedOrder3ID, CustomerID: seedCustomer3ID, StatusID: statusByCode[string(models.OrderStatusProcessing)].ID, TotalSum: 1898, Address: "г. Казань, ул. Чистопольская, д. 33, кв. 12", CreatedAt: parseTime("2025-02-20T09:00:00Z")},
+		{ID: seedOrder4ID, CustomerID: seedCustomer4ID, StatusID: statusByCode[string(models.OrderStatusPending)].ID, TotalSum: 1328, Address: "г. Екатеринбург, ул. Малышева, д. 18, кв. 24", CreatedAt: parseTime("2025-02-21T16:45:00Z")},
+		{ID: seedOrder5ID, CustomerID: seedCustomer5ID, StatusID: statusByCode[string(models.OrderStatusCancelled)].ID, TotalSum: 1198, Address: "г. Новосибирск, Красный проспект, д. 101, кв. 9", CreatedAt: parseTime("2025-02-22T11:20:00Z")},
 	}
 	for i := range orders {
 		orders[i].UpdatedAt = orders[i].CreatedAt
@@ -276,11 +309,11 @@ func seedCustomersOrdersAndItems(db *gorm.DB) error {
 	}
 
 	items := []models.OrderItem{
-		{OrderID: "ORD-2025-001", ProductID: "p1", Qty: 1, Price: 2199}, {OrderID: "ORD-2025-001", ProductID: "p2", Qty: 2, Price: 649},
-		{OrderID: "ORD-2025-002", ProductID: "p3", Qty: 1, Price: 1899},
-		{OrderID: "ORD-2025-003", ProductID: "p4", Qty: 1, Price: 1549}, {OrderID: "ORD-2025-003", ProductID: "p7", Qty: 1, Price: 349},
-		{OrderID: "ORD-2025-004", ProductID: "p5", Qty: 1, Price: 849}, {OrderID: "ORD-2025-004", ProductID: "p8", Qty: 1, Price: 479},
-		{OrderID: "ORD-2025-005", ProductID: "p6", Qty: 2, Price: 599},
+		{OrderID: seedOrder1ID, ProductID: seedSofaProductID, Qty: 1, Price: 2199}, {OrderID: seedOrder1ID, ProductID: seedChairProductID, Qty: 2, Price: 649},
+		{OrderID: seedOrder2ID, ProductID: seedTableProductID, Qty: 1, Price: 1899},
+		{OrderID: seedOrder3ID, ProductID: seedBedProductID, Qty: 1, Price: 1549}, {OrderID: seedOrder3ID, ProductID: seedLampProductID, Qty: 1, Price: 349},
+		{OrderID: seedOrder4ID, ProductID: seedBookshelfProductID, Qty: 1, Price: 849}, {OrderID: seedOrder4ID, ProductID: seedRugProductID, Qty: 1, Price: 479},
+		{OrderID: seedOrder5ID, ProductID: seedDeskProductID, Qty: 2, Price: 599},
 	}
 	return db.Create(&items).Error
 }
@@ -295,9 +328,9 @@ func seedAuditLogs(db *gorm.DB) error {
 	}
 
 	logs := []models.AuditLog{
-		{ID: "log-001", Action: "Product Updated", Category: models.AuditCategoryProduct, User: "admin@maison.co", Entity: "product", EntityID: "p1", Details: "Updated price of Haven Sectional Sofa from $2,499 to $2,199", Timestamp: parseTime("2025-02-26T09:15:00Z"), Severity: models.AuditSeverityInfo, Result: "ok"},
-		{ID: "log-002", Action: "Order Status Changed", Category: models.AuditCategoryOrder, User: "manager@maison.co", Entity: "order", EntityID: "ORD-2025-002", Details: "Order status changed to shipped", Timestamp: parseTime("2025-02-26T10:30:00Z"), Severity: models.AuditSeverityInfo, Result: "ok"},
-		{ID: "log-003", Action: "Failed Login Attempt", Category: models.AuditCategoryUser, User: "unknown", Entity: "user", Details: "3 failed login attempts", Timestamp: parseTime("2025-02-23T03:15:00Z"), Severity: models.AuditSeverityCritical, Result: "failed"},
+		{ID: seedAuditLog1ID, Action: "Обновление товара", Category: models.AuditCategoryProduct, User: "admin@mebel-dom.ru", Entity: "product", EntityID: seedSofaProductID, Details: "Цена товара «Модульный диван „Гавань“» изменена с 2 499 ₽ до 2 199 ₽", Timestamp: parseTime("2025-02-26T09:15:00Z"), Severity: models.AuditSeverityInfo, Result: "ok"},
+		{ID: seedAuditLog2ID, Action: "Смена статуса заказа", Category: models.AuditCategoryOrder, User: "manager@mebel-dom.ru", Entity: "order", EntityID: seedOrder2ID, Details: "Статус заказа изменён на «Передан в доставку»", Timestamp: parseTime("2025-02-26T10:30:00Z"), Severity: models.AuditSeverityInfo, Result: "ok"},
+		{ID: seedAuditLog3ID, Action: "Неудачная попытка входа", Category: models.AuditCategoryUser, User: "неизвестный пользователь", Entity: "user", Details: "Зафиксировано 3 неудачных попытки входа", Timestamp: parseTime("2025-02-23T03:15:00Z"), Severity: models.AuditSeverityCritical, Result: "failed"},
 	}
 	return db.Create(&logs).Error
 }
@@ -375,4 +408,8 @@ func int64Ptr(value int64) *int64 {
 func hashPassword(password string) string {
 	hash := sha256.Sum256([]byte("maison-salt:" + password))
 	return hex.EncodeToString(hash[:])
+}
+
+func seedID(prefix, ts string) string {
+	return fmt.Sprintf("%s-%d", prefix, parseTime(ts).UnixNano())
 }

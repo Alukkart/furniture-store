@@ -21,6 +21,31 @@ import { useAuth } from "@/lib/auth";
 import { usePreferences } from "@/lib/preferences";
 import { siteText } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import {
+  formatCardExpiry,
+  formatCardNumber,
+  formatRussianPhone,
+  isValidCardExpiry,
+  isValidCardNumber,
+  isValidCardholderName,
+  isValidCvv,
+  isValidEmail,
+  isValidRussianAddress,
+  isValidRussianLocation,
+  isValidRussianPersonalName,
+  isValidRussianPhone,
+  isValidRussianPostalCode,
+  normalizeCvv,
+  normalizeEmail,
+  normalizeRussianAddress,
+  normalizeRussianLocation,
+  normalizeRussianName,
+  normalizeRussianPostalCode,
+  sanitizeCardholderNameInput,
+  sanitizeRussianAddressInput,
+  sanitizeRussianLocationInput,
+  sanitizeRussianNameInput,
+} from "@/lib/validation";
 
 type Step = "cart" | "shipping" | "payment" | "confirmation";
 
@@ -47,7 +72,7 @@ export default function CheckoutPage() {
     city: "",
     state: "",
     zip: "",
-    country: "United States",
+    country: "Россия",
   });
   const [payment, setPayment] = useState({
     cardholder: "",
@@ -55,6 +80,9 @@ export default function CheckoutPage() {
     expiry: "",
     cvv: "",
   });
+  const [shippingErrors, setShippingErrors] = useState<Partial<Record<keyof typeof shipping, string>>>({});
+  const [paymentErrors, setPaymentErrors] = useState<Partial<Record<keyof typeof payment, string>>>({});
+  const russianNameMessage = locale === "ru" ? "Введите имя или фамилию кириллицей." : "Enter the name in Cyrillic.";
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 149;
@@ -66,8 +94,8 @@ export default function CheckoutPage() {
     setShipping((current) => ({
       ...current,
       email: current.email || currentUser.email,
-      firstName: current.firstName || currentUser.name.split(" ")[0] || current.firstName,
-      lastName: current.lastName || currentUser.name.split(" ").slice(1).join(" "),
+      firstName: current.firstName || sanitizeRussianNameInput(currentUser.name.split(" ")[0] || current.firstName),
+      lastName: current.lastName || sanitizeRussianNameInput(currentUser.name.split(" ").slice(1).join(" ")),
     }));
   }, [currentUser]);
 
@@ -76,17 +104,9 @@ export default function CheckoutPage() {
       ...current,
       cardholder:
         current.cardholder ||
-        [shipping.firstName, shipping.lastName].filter(Boolean).join(" "),
+        sanitizeCardholderNameInput([shipping.firstName, shipping.lastName].filter(Boolean).join(" ")),
     }));
   }, [shipping.firstName, shipping.lastName]);
-
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phonePattern = /^[+\d\s\-()]{7,20}$/;
-  const zipPattern = /^[A-Za-z0-9\s-]{3,12}$/;
-  const cardholderPattern = /^.+\s.+$/;
-  const cardNumberPattern = /^\d{16}$/;
-  const expiryPattern = /^(0[1-9]|1[0-2])\s?\/\s?\d{2}$/;
-  const cvvPattern = /^\d{3,4}$/;
 
   const validateCartStep = () => {
     if (cart.length === 0) {
@@ -97,61 +117,50 @@ export default function CheckoutPage() {
   };
 
   const validateShippingStep = () => {
-    const fields = [
-      shipping.firstName,
-      shipping.lastName,
-      shipping.email,
-      shipping.phone,
-      shipping.address,
-      shipping.city,
-      shipping.state,
-      shipping.zip,
-    ];
-    if (fields.some((value) => !value.trim())) {
-      setError(t.requiredShipping);
+    const nextErrors: typeof shippingErrors = {};
+
+    if (!shipping.firstName.trim() || !isValidRussianPersonalName(shipping.firstName)) nextErrors.firstName = russianNameMessage;
+    if (!shipping.lastName.trim() || !isValidRussianPersonalName(shipping.lastName)) nextErrors.lastName = russianNameMessage;
+    if (!shipping.email.trim()) nextErrors.email = t.requiredShipping;
+    else if (!isValidEmail(shipping.email)) nextErrors.email = t.invalidEmail;
+    if (!shipping.phone.trim()) nextErrors.phone = t.requiredShipping;
+    else if (!isValidRussianPhone(shipping.phone)) nextErrors.phone = t.invalidPhone;
+    if (!shipping.address.trim()) nextErrors.address = t.requiredShipping;
+    else if (!isValidRussianAddress(shipping.address)) nextErrors.address = locale === "ru" ? "Введите адрес в российском формате: улица, дом, квартира." : "Enter a Russian-style street address with house number.";
+    if (!shipping.city.trim() || !isValidRussianLocation(shipping.city)) nextErrors.city = locale === "ru" ? "Введите город кириллицей." : "Enter the city in Cyrillic.";
+    if (!shipping.state.trim() || !isValidRussianLocation(shipping.state)) nextErrors.state = locale === "ru" ? "Введите регион кириллицей." : "Enter the region in Cyrillic.";
+    if (!shipping.zip.trim()) nextErrors.zip = t.requiredShipping;
+    else if (!isValidRussianPostalCode(shipping.zip)) nextErrors.zip = t.invalidZip;
+
+    if (Object.keys(nextErrors).length > 0) {
+      setShippingErrors(nextErrors);
+      setError(Object.values(nextErrors)[0] ?? t.requiredShipping);
       return false;
     }
-    if (!emailPattern.test(shipping.email.trim().toLowerCase())) {
-      setError(t.invalidEmail);
-      return false;
-    }
-    if (!phonePattern.test(shipping.phone.trim())) {
-      setError(t.invalidPhone);
-      return false;
-    }
-    if (!zipPattern.test(shipping.zip.trim())) {
-      setError(t.invalidZip);
-      return false;
-    }
+
+    setShippingErrors({});
     return true;
   };
 
   const validatePaymentStep = () => {
-    if (
-      !payment.cardholder.trim() ||
-      !payment.cardNumber.trim() ||
-      !payment.expiry.trim() ||
-      !payment.cvv.trim()
-    ) {
-      setError(t.requiredPayment);
+    const nextErrors: typeof paymentErrors = {};
+
+    if (!payment.cardholder.trim()) nextErrors.cardholder = t.requiredPayment;
+    else if (!isValidCardholderName(payment.cardholder)) nextErrors.cardholder = t.invalidCardholder;
+    if (!payment.cardNumber.trim()) nextErrors.cardNumber = t.requiredPayment;
+    else if (!isValidCardNumber(payment.cardNumber)) nextErrors.cardNumber = t.invalidCardNumber;
+    if (!payment.expiry.trim()) nextErrors.expiry = t.requiredPayment;
+    else if (!isValidCardExpiry(payment.expiry)) nextErrors.expiry = t.invalidExpiry;
+    if (!payment.cvv.trim()) nextErrors.cvv = t.requiredPayment;
+    else if (!isValidCvv(payment.cvv)) nextErrors.cvv = t.invalidCvv;
+
+    if (Object.keys(nextErrors).length > 0) {
+      setPaymentErrors(nextErrors);
+      setError(Object.values(nextErrors)[0] ?? t.requiredPayment);
       return false;
     }
-    if (!cardholderPattern.test(payment.cardholder.trim())) {
-      setError(t.invalidCardholder);
-      return false;
-    }
-    if (!cardNumberPattern.test(payment.cardNumber.replace(/\s+/g, ""))) {
-      setError(t.invalidCardNumber);
-      return false;
-    }
-    if (!expiryPattern.test(payment.expiry.trim())) {
-      setError(t.invalidExpiry);
-      return false;
-    }
-    if (!cvvPattern.test(payment.cvv.trim())) {
-      setError(t.invalidCvv);
-      return false;
-    }
+
+    setPaymentErrors({});
     return true;
   };
 
@@ -161,9 +170,9 @@ export default function CheckoutPage() {
     if (!validateCartStep() || !validateShippingStep() || !validatePaymentStep()) return;
     setIsPlacingOrder(true);
 
-    const fullName = `${shipping.firstName} ${shipping.lastName}`;
-    const address = `${shipping.address}, ${shipping.city}, ${shipping.state} ${shipping.zip}`;
-    const order = await placeOrder(fullName.trim(), shipping.email.trim().toLowerCase(), address);
+    const fullName = `${normalizeRussianName(shipping.firstName)} ${normalizeRussianName(shipping.lastName)}`;
+    const address = `${normalizeRussianAddress(shipping.address)}, ${normalizeRussianLocation(shipping.city)}, ${normalizeRussianLocation(shipping.state)}, ${normalizeRussianPostalCode(shipping.zip)}`;
+    const order = await placeOrder(fullName.trim(), normalizeEmail(shipping.email), address);
     if (order) {
       setOrderId(order.id);
       setStep("confirmation");
@@ -362,10 +371,10 @@ export default function CheckoutPage() {
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
-                      { key: "firstName", label: t.firstName, placeholder: "Иванов", col: 1 },
-                      { key: "lastName", label: t.lastName, placeholder: "Иван", col: 1 },
+                      { key: "firstName", label: t.firstName, placeholder: "Иван", col: 1 },
+                      { key: "lastName", label: t.lastName, placeholder: "Иванов", col: 1 },
                       { key: "email", label: t.email, placeholder: "ivan@mail.com", col: 2 },
-                      { key: "phone", label: t.phone, placeholder: "+7999 999 99 99", col: 2 },
+                      { key: "phone", label: t.phone, placeholder: "+7 999 999 99 99", col: 2 },
                     ].map((f) => (
                       <div key={f.key} className={f.col === 2 ? "sm:col-span-2" : ""}>
                         <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -375,11 +384,31 @@ export default function CheckoutPage() {
                           type={f.key === "email" ? "email" : "text"}
                           placeholder={f.placeholder}
                           value={shipping[f.key as keyof typeof shipping]}
-                          onChange={(e) =>
-                            setShipping((s) => ({ ...s, [f.key]: e.target.value }))
-                          }
-                          className="w-full border border-input rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          onChange={(e) => {
+                            let nextValue = e.target.value;
+
+                            if (f.key === "firstName" || f.key === "lastName") {
+                              nextValue = sanitizeRussianNameInput(nextValue);
+                            } else if (f.key === "phone") {
+                              nextValue = formatRussianPhone(nextValue);
+                            }
+
+                            setShipping((s) => ({ ...s, [f.key]: nextValue }));
+                            if (shippingErrors[f.key as keyof typeof shipping]) {
+                              setShippingErrors((current) => ({ ...current, [f.key]: undefined }));
+                            }
+                          }}
+                          inputMode={f.key === "phone" ? "tel" : undefined}
+                          autoComplete={f.key === "phone" ? "tel" : undefined}
+                          maxLength={f.key === "phone" ? 16 : undefined}
+                          className={cn(
+                            "w-full border rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring",
+                            shippingErrors[f.key as keyof typeof shipping] ? "border-destructive" : "border-input"
+                          )}
                         />
+                        {shippingErrors[f.key as keyof typeof shipping] && (
+                          <p className="mt-1 text-xs text-destructive">{shippingErrors[f.key as keyof typeof shipping]}</p>
+                        )}
                       </div>
                     ))}
 
@@ -389,17 +418,24 @@ export default function CheckoutPage() {
                         </label>
                       <input
                         type="text"
-                        placeholder="123 Main Street, Apt 4B"
+                        placeholder={locale === "ru" ? "ул. Тверская, д. 12, кв. 8" : "ул. Тверская, д. 12, кв. 8"}
                         value={shipping.address}
-                        onChange={(e) => setShipping((s) => ({ ...s, address: e.target.value }))}
-                        className="w-full border border-input rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        onChange={(e) => {
+                          setShipping((s) => ({ ...s, address: sanitizeRussianAddressInput(e.target.value) }));
+                          if (shippingErrors.address) setShippingErrors((current) => ({ ...current, address: undefined }));
+                        }}
+                        className={cn(
+                          "w-full border rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring",
+                          shippingErrors.address ? "border-destructive" : "border-input"
+                        )}
                       />
+                      {shippingErrors.address && <p className="mt-1 text-xs text-destructive">{shippingErrors.address}</p>}
                     </div>
 
                       {[
-                      { key: "city", label: t.city, placeholder: "San Francisco" },
-                      { key: "state", label: t.state, placeholder: "CA" },
-                      { key: "zip", label: t.zip, placeholder: "94102" },
+                      { key: "city", label: t.city, placeholder: "Москва" },
+                      { key: "state", label: t.state, placeholder: "Московская область" },
+                      { key: "zip", label: t.zip, placeholder: "101000" },
                     ].map((f) => (
                       <div key={f.key}>
                         <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -409,11 +445,26 @@ export default function CheckoutPage() {
                           type="text"
                           placeholder={f.placeholder}
                           value={shipping[f.key as keyof typeof shipping]}
-                          onChange={(e) =>
-                            setShipping((s) => ({ ...s, [f.key]: e.target.value }))
-                          }
-                          className="w-full border border-input rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          onChange={(e) => {
+                            const nextValue =
+                              f.key === "zip"
+                                ? normalizeRussianPostalCode(e.target.value)
+                                : sanitizeRussianLocationInput(e.target.value);
+                            setShipping((s) => ({ ...s, [f.key]: nextValue }));
+                            if (shippingErrors[f.key as keyof typeof shipping]) {
+                              setShippingErrors((current) => ({ ...current, [f.key]: undefined }));
+                            }
+                          }}
+                          inputMode={f.key === "zip" ? "numeric" : undefined}
+                          maxLength={f.key === "zip" ? 6 : undefined}
+                          className={cn(
+                            "w-full border rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring",
+                            shippingErrors[f.key as keyof typeof shipping] ? "border-destructive" : "border-input"
+                          )}
                         />
+                        {shippingErrors[f.key as keyof typeof shipping] && (
+                          <p className="mt-1 text-xs text-destructive">{shippingErrors[f.key as keyof typeof shipping]}</p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -462,11 +513,18 @@ export default function CheckoutPage() {
                         </label>
                       <input
                         type="text"
-                        placeholder="Jane Doe"
+                        placeholder={locale === "ru" ? "IVANOV IVAN" : "IVANOV IVAN"}
                         value={payment.cardholder}
-                        onChange={(e) => setPayment((current) => ({ ...current, cardholder: e.target.value }))}
-                        className="w-full border border-input rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        onChange={(e) => {
+                          setPayment((current) => ({ ...current, cardholder: sanitizeCardholderNameInput(e.target.value) }));
+                          if (paymentErrors.cardholder) setPaymentErrors((current) => ({ ...current, cardholder: undefined }));
+                        }}
+                        className={cn(
+                          "w-full border rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring",
+                          paymentErrors.cardholder ? "border-destructive" : "border-input"
+                        )}
                       />
+                      {paymentErrors.cardholder && <p className="mt-1 text-xs text-destructive">{paymentErrors.cardholder}</p>}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -478,13 +536,21 @@ export default function CheckoutPage() {
                         maxLength={19}
                         value={payment.cardNumber}
                         onChange={(e) =>
-                          setPayment((current) => ({
-                            ...current,
-                            cardNumber: e.target.value.replace(/[^\d\s]/g, ""),
-                          }))
+                          {
+                            setPayment((current) => ({
+                              ...current,
+                              cardNumber: formatCardNumber(e.target.value),
+                            }));
+                            if (paymentErrors.cardNumber) setPaymentErrors((current) => ({ ...current, cardNumber: undefined }));
+                          }
                         }
-                        className="w-full border border-input rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        inputMode="numeric"
+                        className={cn(
+                          "w-full border rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring",
+                          paymentErrors.cardNumber ? "border-destructive" : "border-input"
+                        )}
                       />
+                      {paymentErrors.cardNumber && <p className="mt-1 text-xs text-destructive">{paymentErrors.cardNumber}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -496,9 +562,17 @@ export default function CheckoutPage() {
                         placeholder="MM / YY"
                         maxLength={7}
                         value={payment.expiry}
-                        onChange={(e) => setPayment((current) => ({ ...current, expiry: e.target.value }))}
-                        className="w-full border border-input rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        onChange={(e) => {
+                          setPayment((current) => ({ ...current, expiry: formatCardExpiry(e.target.value) }));
+                          if (paymentErrors.expiry) setPaymentErrors((current) => ({ ...current, expiry: undefined }));
+                        }}
+                        inputMode="numeric"
+                        className={cn(
+                          "w-full border rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring",
+                          paymentErrors.expiry ? "border-destructive" : "border-input"
+                        )}
                       />
+                      {paymentErrors.expiry && <p className="mt-1 text-xs text-destructive">{paymentErrors.expiry}</p>}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -510,13 +584,21 @@ export default function CheckoutPage() {
                         maxLength={4}
                         value={payment.cvv}
                         onChange={(e) =>
-                          setPayment((current) => ({
-                            ...current,
-                            cvv: e.target.value.replace(/\D/g, ""),
-                          }))
+                          {
+                            setPayment((current) => ({
+                              ...current,
+                              cvv: normalizeCvv(e.target.value),
+                            }));
+                            if (paymentErrors.cvv) setPaymentErrors((current) => ({ ...current, cvv: undefined }));
+                          }
                         }
-                        className="w-full border border-input rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        inputMode="numeric"
+                        className={cn(
+                          "w-full border rounded px-3.5 py-2.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring",
+                          paymentErrors.cvv ? "border-destructive" : "border-input"
+                        )}
                       />
+                      {paymentErrors.cvv && <p className="mt-1 text-xs text-destructive">{paymentErrors.cvv}</p>}
                       </div>
                     </div>
                   </div>

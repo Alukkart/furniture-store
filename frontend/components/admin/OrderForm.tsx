@@ -4,6 +4,17 @@ import { useState } from "react";
 import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { adminText, translateOrderStatus } from "@/lib/admin-i18n";
+import { cn } from "@/lib/utils";
+import {
+  isValidEmail,
+  isValidRussianAddress,
+  isValidRussianFullName,
+  normalizeEmail,
+  normalizeRussianAddress,
+  normalizeRussianName,
+  sanitizeRussianAddressInput,
+  sanitizeRussianNameInput,
+} from "@/lib/validation";
 import type { Order, Product } from "@/lib/types";
 
 const STATUS_OPTIONS: Order["status"][] = [
@@ -27,6 +38,11 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
   const t = adminText[locale].orderForm;
   const [order, setOrder] = useState<Order>(initialOrder);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    customer?: string;
+    email?: string;
+    address?: string;
+  }>({});
 
   function updateItem(index: number, updates: Partial<Order["items"][number]>) {
     setOrder((current) => ({
@@ -61,11 +77,14 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    const normalizedCustomer = normalizeRussianName(order.customer);
+    const normalizedEmail = normalizeEmail(order.email);
+    const normalizedAddress = normalizeRussianAddress(order.address);
+    const nextErrors: typeof fieldErrors = {};
 
-    if (!order.customer.trim() || !order.email.trim() || !order.address.trim()) {
-      setError(t.required);
-      return;
-    }
+    if (!normalizedCustomer || !isValidRussianFullName(normalizedCustomer)) nextErrors.customer = t.required;
+    if (!normalizedEmail || !isValidEmail(normalizedEmail)) nextErrors.email = t.required;
+    if (!normalizedAddress || !isValidRussianAddress(normalizedAddress)) nextErrors.address = t.required;
     if (order.items.length === 0) {
       setError(t.needItem);
       return;
@@ -75,7 +94,19 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
       return;
     }
 
-    await onSubmit(order);
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
+      setError(Object.values(nextErrors)[0] ?? t.required);
+      return;
+    }
+
+    setFieldErrors({});
+    await onSubmit({
+      ...order,
+      customer: normalizedCustomer,
+      email: normalizedEmail,
+      address: normalizedAddress,
+    });
   }
 
   return (
@@ -94,27 +125,39 @@ export default function OrderForm({ initialOrder, products, submitLabel, isSubmi
               <span className="text-sm font-medium text-foreground">{t.customer}</span>
               <input
                 value={order.customer}
-                onChange={(e) => setOrder((current) => ({ ...current, customer: e.target.value }))}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+                onChange={(e) => {
+                  setOrder((current) => ({ ...current, customer: sanitizeRussianNameInput(e.target.value) }));
+                  if (fieldErrors.customer) setFieldErrors((current) => ({ ...current, customer: undefined }));
+                }}
+                className={cn("w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground", fieldErrors.customer ? "border-destructive" : "border-input")}
               />
+              {fieldErrors.customer && <span className="text-xs text-destructive">{fieldErrors.customer}</span>}
             </label>
             <label className="space-y-1.5">
               <span className="text-sm font-medium text-foreground">{t.email}</span>
               <input
                 type="email"
                 value={order.email}
-                onChange={(e) => setOrder((current) => ({ ...current, email: e.target.value }))}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+                onChange={(e) => {
+                  setOrder((current) => ({ ...current, email: e.target.value }));
+                  if (fieldErrors.email) setFieldErrors((current) => ({ ...current, email: undefined }));
+                }}
+                className={cn("w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground", fieldErrors.email ? "border-destructive" : "border-input")}
               />
+              {fieldErrors.email && <span className="text-xs text-destructive">{fieldErrors.email}</span>}
             </label>
             <label className="space-y-1.5">
               <span className="text-sm font-medium text-foreground">{t.address}</span>
               <textarea
                 value={order.address}
-                onChange={(e) => setOrder((current) => ({ ...current, address: e.target.value }))}
+                onChange={(e) => {
+                  setOrder((current) => ({ ...current, address: sanitizeRussianAddressInput(e.target.value) }));
+                  if (fieldErrors.address) setFieldErrors((current) => ({ ...current, address: undefined }));
+                }}
                 rows={4}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+                className={cn("w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground", fieldErrors.address ? "border-destructive" : "border-input")}
               />
+              {fieldErrors.address && <span className="text-xs text-destructive">{fieldErrors.address}</span>}
             </label>
             <label className="space-y-1.5">
               <span className="text-sm font-medium text-foreground">{t.date}</span>

@@ -146,7 +146,7 @@ export const useStore = create<StoreState>()(
         }
       },
 
-      updateProduct: async (product, adminUser = "admin@maison.co") => {
+      updateProduct: async (product, adminUser = "admin@mebel-dom.ru") => {
         try {
           const updated = await updateProductRequest(product.id, product);
           const [products, auditLogs] = await Promise.all([listProducts(), listAuditLogs()]);
@@ -158,7 +158,7 @@ export const useStore = create<StoreState>()(
         }
       },
 
-      deleteProduct: async (productId, adminUser = "admin@maison.co") => {
+      deleteProduct: async (productId, adminUser = "admin@mebel-dom.ru") => {
         try {
           await deleteProductRequest(productId);
           const [products, auditLogs] = await Promise.all([listProducts(), listAuditLogs()]);
@@ -170,7 +170,7 @@ export const useStore = create<StoreState>()(
         }
       },
 
-      updateOrder: async (order, adminUser = "admin@maison.co") => {
+      updateOrder: async (order, adminUser = "admin@mebel-dom.ru") => {
         try {
           const updated = await updateOrderRequest(order.id, order, adminUser);
           const [orders, auditLogs, products] = await Promise.all([listOrders(), listAuditLogs(), listProducts()]);
@@ -182,7 +182,7 @@ export const useStore = create<StoreState>()(
         }
       },
 
-      updateOrderStatus: async (orderId, status, adminUser = "admin@maison.co") => {
+      updateOrderStatus: async (orderId, status, adminUser = "admin@mebel-dom.ru") => {
         try {
           const updated = await updateOrderStatusRequest(orderId, status, adminUser);
           const [orders, auditLogs] = await Promise.all([listOrders(), listAuditLogs()]);

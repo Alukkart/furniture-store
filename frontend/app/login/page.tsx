@@ -131,10 +131,10 @@ export default function LoginPage() {
           <div className="rounded-lg bg-secondary border border-border px-4 py-3">
             <p className="text-xs font-semibold text-foreground mb-1.5">{t.demo}</p>
             <div className="space-y-0.5 text-xs text-muted-foreground font-mono">
-              <p>admin@maison.co / admin123</p>
-              <p>manager@maison.co / manager123</p>
-              <p>warehouse@maison.co / warehouse123</p>
-              <p>executive@maison.co / executive123</p>
+              <p>admin@mebel-dom.ru / admin123</p>
+              <p>manager@mebel-dom.ru / manager123</p>
+              <p>warehouse@mebel-dom.ru / warehouse123</p>
+              <p>executive@mebel-dom.ru / executive123</p>
               <p>{t.clientHint}</p>
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function LoginPage() {
                     setEmail(e.target.value);
                     if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
                   }}
-                  placeholder="admin@maison.co"
+                  placeholder="admin@mebel-dom.ru"
                   className={cn(
                     "w-full pl-10 pr-4 py-2.5 rounded-lg border bg-card text-foreground placeholder:text-muted-foreground/50 text-sm outline-none transition-all",
                     "focus:ring-2 focus:ring-ring focus:border-transparent",

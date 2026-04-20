@@ -52,12 +52,20 @@ func (r *ProductRepository) GetByID(id string) (models.Product, error) {
 }
 
 func (r *ProductRepository) FindCategoryIDByName(name string) (uint, error) {
-	var c models.Category
-	err := r.db.Where("LOWER(name) = ?", strings.ToLower(strings.TrimSpace(name))).First(&c).Error
-	if err != nil {
+	normalizedName := strings.TrimSpace(name)
+
+	var categories []models.Category
+	if err := r.db.Find(&categories).Error; err != nil {
 		return 0, err
 	}
-	return c.ID, nil
+
+	for _, category := range categories {
+		if strings.EqualFold(strings.TrimSpace(category.Name), normalizedName) {
+			return category.ID, nil
+		}
+	}
+
+	return 0, gorm.ErrRecordNotFound
 }
 
 func (r *ProductRepository) Create(product *models.Product) error {

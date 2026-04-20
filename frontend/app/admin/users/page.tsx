@@ -6,6 +6,14 @@ import AdminLayout from "@/components/AdminLayout";
 import { usePreferences } from "@/lib/preferences";
 import { adminText, translateAdminRole } from "@/lib/admin-i18n";
 import type { RoleName } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import {
+  isValidEmail,
+  isValidRussianFullName,
+  normalizeEmail,
+  normalizeRussianName,
+  sanitizeRussianNameInput,
+} from "@/lib/validation";
 import { createUser, listUsers, setUserBlocked, type UserRecord } from "@/services/users";
 import { getApiErrorMessage } from "@/services/http";
 
@@ -25,6 +33,11 @@ export default function UsersPage() {
     password: "",
     role: "Manager" as RoleName,
   });
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+  }>({});
 
   async function loadUsers() {
     setIsLoading(true);
@@ -56,10 +69,31 @@ export default function UsersPage() {
 
   async function handleCreateUser(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const normalizedName = normalizeRussianName(form.name);
+    const normalizedEmail = normalizeEmail(form.email);
+    const nextErrors: typeof fieldErrors = {};
+
+    if (!normalizedName || !isValidRussianFullName(normalizedName)) {
+      nextErrors.name = locale === "ru" ? "Введите ФИО на русском языке." : "Enter a Russian full name.";
+    }
+    if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
+      nextErrors.email = locale === "ru" ? "Введите корректный email." : "Enter a valid email.";
+    }
+    if (!form.password || form.password.length < 6) {
+      nextErrors.password = locale === "ru" ? "Пароль должен быть не короче 6 символов." : "Password must be at least 6 characters.";
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
+      setError(Object.values(nextErrors)[0] ?? null);
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
+    setFieldErrors({});
     try {
-      await createUser(form);
+      await createUser({ ...form, name: normalizedName, email: normalizedEmail });
       setForm({ name: "", email: "", password: "", role: "Manager" });
       await loadUsers();
     } catch (createError) {
@@ -89,15 +123,27 @@ export default function UsersPage() {
             <form onSubmit={handleCreateUser} className="mt-4 space-y-4">
               <label className="space-y-1.5 block">
                 <span className="text-sm font-medium text-foreground">{t.name}</span>
-                <input required value={form.name} onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />
+                <input required value={form.name} onChange={(e) => {
+                  setForm((current) => ({ ...current, name: sanitizeRussianNameInput(e.target.value) }));
+                  if (fieldErrors.name) setFieldErrors((current) => ({ ...current, name: undefined }));
+                }} className={cn("w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground", fieldErrors.name ? "border-destructive" : "border-input")} />
+                {fieldErrors.name && <span className="text-xs text-destructive">{fieldErrors.name}</span>}
               </label>
               <label className="space-y-1.5 block">
                 <span className="text-sm font-medium text-foreground">{t.email}</span>
-                <input required type="email" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />
+                <input required type="email" value={form.email} onChange={(e) => {
+                  setForm((current) => ({ ...current, email: e.target.value }));
+                  if (fieldErrors.email) setFieldErrors((current) => ({ ...current, email: undefined }));
+                }} className={cn("w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground", fieldErrors.email ? "border-destructive" : "border-input")} />
+                {fieldErrors.email && <span className="text-xs text-destructive">{fieldErrors.email}</span>}
               </label>
               <label className="space-y-1.5 block">
                 <span className="text-sm font-medium text-foreground">{t.password}</span>
-                <input required type="password" value={form.password} onChange={(e) => setForm((current) => ({ ...current, password: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />
+                <input required type="password" value={form.password} onChange={(e) => {
+                  setForm((current) => ({ ...current, password: e.target.value }));
+                  if (fieldErrors.password) setFieldErrors((current) => ({ ...current, password: undefined }));
+                }} className={cn("w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground", fieldErrors.password ? "border-destructive" : "border-input")} />
+                {fieldErrors.password && <span className="text-xs text-destructive">{fieldErrors.password}</span>}
               </label>
               <label className="space-y-1.5 block">
                 <span className="text-sm font-medium text-foreground">{t.role}</span>

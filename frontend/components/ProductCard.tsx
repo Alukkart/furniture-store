@@ -55,19 +55,19 @@ export default function ProductCard({ product, className }: Props) {
             {product.name}
           </h3>
         </Link>
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-foreground">
-              {formatPrice(product.price)}
+        <div className="mt-4 flex items-baseline gap-2">
+          <span className="text-lg font-semibold text-foreground">
+            {formatPrice(product.price)}
+          </span>
+          {product.originalPrice && (
+            <span className="text-sm text-muted-foreground line-through">
+              {formatPrice(product.originalPrice)}
             </span>
-            {product.originalPrice && (
-              <span className="text-sm text-muted-foreground line-through">
-                {formatPrice(product.originalPrice)}
-              </span>
-            )}
-          </div>
+          )}
+        </div>
+        <div className="mt-4">
           {quantityInCart > 0 ? (
-            <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-1">
+            <div className="flex w-full items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-1">
               <button
                 type="button"
                 onClick={() => updateCartQuantity(product.id, quantityInCart - 1)}
@@ -76,7 +76,7 @@ export default function ProductCard({ product, className }: Props) {
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
-              <div className="min-w-[4.5rem] text-center">
+              <div className="flex-1 text-center">
                 <p className="text-xs text-muted-foreground">
                   {quantityInCart}
                 </p>
@@ -96,7 +96,7 @@ export default function ProductCard({ product, className }: Props) {
               type="button"
               onClick={() => addToCart(product)}
               disabled={product.stock === 0}
-              className="flex items-center gap-2 bg-primary text-primary-foreground text-xs font-medium px-3.5 py-2 rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex w-full items-center justify-center gap-2 rounded bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={t.addToCartAria.replace("{name}", product.name)}
             >
               <ShoppingCart className="w-3.5 h-3.5" />

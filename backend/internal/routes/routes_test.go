@@ -93,7 +93,7 @@ func TestLoginCreatesAuditLog(t *testing.T) {
 	app, db := setupTestApp(t)
 
 	resp := performJSONRequest(t, app, http.MethodPost, "/api/auth/login", map[string]string{
-		"email":    "admin@maison.co",
+		"email":    "admin@mebel-dom.ru",
 		"password": "admin123",
 	}, nil)
 
@@ -113,7 +113,7 @@ func TestLoginCreatesAuditLog(t *testing.T) {
 func TestTokenEndpointReturnsOAuthPayload(t *testing.T) {
 	app, _ := setupTestApp(t)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/auth/token", bytes.NewBufferString("username=admin%40maison.co&password=admin123&grant_type=password"))
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/token", bytes.NewBufferString("username=admin%40mebel-dom.ru&password=admin123&grant_type=password"))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := app.Test(req)
@@ -145,12 +145,12 @@ func TestTokenEndpointReturnsOAuthPayload(t *testing.T) {
 
 func TestProductCreateRequiresAuthentication(t *testing.T) {
 	app, _ := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
+	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
 
 	payload := map[string]any{
 		"id":          "p-admin",
 		"name":        "Admin Product",
-		"category":    "Living Room",
+		"category":    "Гостиная",
 		"price":       120,
 		"image":       "/images/admin.jpg",
 		"description": "Created by admin",
@@ -178,6 +178,7 @@ func TestProductCreateRequiresAuthentication(t *testing.T) {
 
 func TestCreateOrderRollsBackOnInsufficientStock(t *testing.T) {
 	app, db := setupTestApp(t)
+	productID := mustFindProductIDBySKU(t, db, "SOF-HVNS-BEI")
 
 	resp := performJSONRequest(t, app, http.MethodPost, "/api/orders", map[string]any{
 		"customer": "John Doe",
@@ -185,7 +186,7 @@ func TestCreateOrderRollsBackOnInsufficientStock(t *testing.T) {
 		"address":  "Main Street",
 		"items": []map[string]any{
 			{
-				"product":  map[string]any{"id": "p1"},
+				"product":  map[string]any{"id": productID},
 				"quantity": 100,
 			},
 		},
@@ -196,7 +197,7 @@ func TestCreateOrderRollsBackOnInsufficientStock(t *testing.T) {
 	}
 
 	var product models.Product
-	if err := db.First(&product, "id = ?", "p1").Error; err != nil {
+	if err := db.First(&product, "id = ?", productID).Error; err != nil {
 		t.Fatalf("fetch product: %v", err)
 	}
 	if product.StockQty != 12 {
@@ -206,9 +207,10 @@ func TestCreateOrderRollsBackOnInsufficientStock(t *testing.T) {
 
 func TestManagerCanUpdateOrderStatus(t *testing.T) {
 	app, db := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
+	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
+	orderID := mustFindOrderIDByAddress(t, db, "г. Екатеринбург, ул. Малышева, д. 18, кв. 24")
 
-	resp := performJSONRequest(t, app, http.MethodPatch, "/api/orders/ORD-2025-004/status", map[string]any{
+	resp := performJSONRequest(t, app, http.MethodPatch, "/api/orders/"+orderID+"/status", map[string]any{
 		"status": "shipped",
 	}, map[string]string{
 		"Authorization": "Bearer " + managerToken,
@@ -219,7 +221,7 @@ func TestManagerCanUpdateOrderStatus(t *testing.T) {
 	}
 
 	var order models.Order
-	if err := db.First(&order, "id = ?", "ORD-2025-004").Error; err != nil {
+	if err := db.First(&order, "id = ?", orderID).Error; err != nil {
 		t.Fatalf("fetch order: %v", err)
 	}
 
@@ -234,7 +236,7 @@ func TestManagerCanUpdateOrderStatus(t *testing.T) {
 
 func TestForecastRequiresAuthentication(t *testing.T) {
 	app, _ := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
+	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
 
 	resp := performJSONRequest(t, app, http.MethodGet, "/api/forecast?months=3", nil, nil)
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -253,7 +255,7 @@ func TestLoginRejectsInvalidCredentials(t *testing.T) {
 	app, _ := setupTestApp(t)
 
 	resp := performJSONRequest(t, app, http.MethodPost, "/api/auth/login", map[string]string{
-		"email":    "admin@maison.co",
+		"email":    "admin@mebel-dom.ru",
 		"password": "wrong-password",
 	}, nil)
 
@@ -263,10 +265,11 @@ func TestLoginRejectsInvalidCredentials(t *testing.T) {
 }
 
 func TestManagerCannotDeleteProduct(t *testing.T) {
-	app, _ := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
+	app, db := setupTestApp(t)
+	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
+	productID := mustFindProductIDBySKU(t, db, "SOF-HVNS-BEI")
 
-	resp := performJSONRequest(t, app, http.MethodDelete, "/api/products/p1", nil, map[string]string{
+	resp := performJSONRequest(t, app, http.MethodDelete, "/api/products/"+productID, nil, map[string]string{
 		"Authorization": "Bearer " + managerToken,
 	})
 
@@ -277,6 +280,7 @@ func TestManagerCannotDeleteProduct(t *testing.T) {
 
 func TestCreateOrderSuccess(t *testing.T) {
 	app, db := setupTestApp(t)
+	productID := mustFindProductIDBySKU(t, db, "SOF-HVNS-BEI")
 
 	resp := performJSONRequest(t, app, http.MethodPost, "/api/orders", map[string]any{
 		"customer": "Jane Doe",
@@ -284,7 +288,7 @@ func TestCreateOrderSuccess(t *testing.T) {
 		"address":  "Ocean Avenue",
 		"items": []map[string]any{
 			{
-				"product":  map[string]any{"id": "p1"},
+				"product":  map[string]any{"id": productID},
 				"quantity": 1,
 			},
 		},
@@ -296,7 +300,7 @@ func TestCreateOrderSuccess(t *testing.T) {
 	}
 
 	var product models.Product
-	if err := db.First(&product, "id = ?", "p1").Error; err != nil {
+	if err := db.First(&product, "id = ?", productID).Error; err != nil {
 		t.Fatalf("fetch product: %v", err)
 	}
 	if product.StockQty != 11 {
@@ -306,7 +310,7 @@ func TestCreateOrderSuccess(t *testing.T) {
 
 func TestForecastAccessibleByExecutive(t *testing.T) {
 	app, _ := setupTestApp(t)
-	executiveToken := loginAndGetToken(t, app, "executive@maison.co", "executive123")
+	executiveToken := loginAndGetToken(t, app, "executive@mebel-dom.ru", "executive123")
 
 	resp := performJSONRequest(t, app, http.MethodGet, "/api/forecast?months=3", nil, map[string]string{
 		"Authorization": "Bearer " + executiveToken,
@@ -318,10 +322,11 @@ func TestForecastAccessibleByExecutive(t *testing.T) {
 }
 
 func TestNonAdminCannotBlockUser(t *testing.T) {
-	app, _ := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
+	app, db := setupTestApp(t)
+	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
+	userID := mustFindUserIDByEmail(t, db, "warehouse@mebel-dom.ru")
 
-	resp := performJSONRequest(t, app, http.MethodPatch, "/api/users/u-warehouse/block", map[string]any{
+	resp := performJSONRequest(t, app, http.MethodPatch, "/api/users/"+userID+"/block", map[string]any{
 		"is_blocked": true,
 	}, map[string]string{
 		"Authorization": "Bearer " + managerToken,
@@ -333,7 +338,8 @@ func TestNonAdminCannotBlockUser(t *testing.T) {
 }
 
 func TestClientCanSignupAndViewOwnOrders(t *testing.T) {
-	app, _ := setupTestApp(t)
+	app, db := setupTestApp(t)
+	productID := mustFindProductIDBySKU(t, db, "CHR-ARIA-TER")
 
 	signupResp := performJSONRequest(t, app, http.MethodPost, "/api/auth/signup", map[string]string{
 		"email":    "client@example.com",
@@ -353,7 +359,7 @@ func TestClientCanSignupAndViewOwnOrders(t *testing.T) {
 		"address":  "Client Street",
 		"items": []map[string]any{
 			{
-				"product":  map[string]any{"id": "p2"},
+				"product":  map[string]any{"id": productID},
 				"quantity": 1,
 			},
 		},
@@ -381,4 +387,37 @@ func TestClientCanSignupAndViewOwnOrders(t *testing.T) {
 	if orders[0].Email != "client@example.com" {
 		t.Fatalf("expected client order email, got %s", orders[0].Email)
 	}
+}
+
+func mustFindProductIDBySKU(t *testing.T, db *gorm.DB, sku string) string {
+	t.Helper()
+
+	var product models.Product
+	if err := db.Where("sku = ?", sku).First(&product).Error; err != nil {
+		t.Fatalf("find product by sku %s: %v", sku, err)
+	}
+
+	return product.ID
+}
+
+func mustFindOrderIDByAddress(t *testing.T, db *gorm.DB, address string) string {
+	t.Helper()
+
+	var order models.Order
+	if err := db.Where("address = ?", address).First(&order).Error; err != nil {
+		t.Fatalf("find order by address %s: %v", address, err)
+	}
+
+	return order.ID
+}
+
+func mustFindUserIDByEmail(t *testing.T, db *gorm.DB, email string) string {
+	t.Helper()
+
+	var user models.User
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		t.Fatalf("find user by email %s: %v", email, err)
+	}
+
+	return user.ID
 }
