@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarRange, Loader2, Package2, ShoppingCart, TrendingUp } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
+import { formatPrice } from "@/lib/currency";
 import { usePreferences } from "@/lib/preferences";
 import { adminText } from "@/lib/admin-i18n";
+import { useStore } from "@/lib/store";
 import { getForecast, trainForecast } from "@/services/forecast";
 import { getApiErrorMessage } from "@/services/http";
 import type { ForecastResponse } from "@/lib/types";
@@ -21,6 +23,7 @@ function confidenceClass(confidence: number) {
 
 export default function ForecastPage() {
   const { currentUser } = useAuth();
+  const orders = useStore((s) => s.orders);
   const locale = usePreferences((s) => s.locale);
   const t = adminText[locale].forecast;
   const [periodMonths, setPeriodMonths] = useState(3);
@@ -60,6 +63,26 @@ export default function ForecastPage() {
   const totalRecommendedBuy = useMemo(() => {
     return forecast?.rows.reduce((sum, item) => sum + item.recommended_buy, 0) ?? 0;
   }, [forecast]);
+
+  const categorySales = useMemo(() => {
+    const salesMap = new Map<string, { units: number; revenue: number }>();
+
+    orders
+      .filter((order) => order.status !== "cancelled")
+      .forEach((order) => {
+        order.items.forEach((item) => {
+          const key = item.product.category;
+          const current = salesMap.get(key) ?? { units: 0, revenue: 0 };
+          current.units += item.quantity;
+          current.revenue += item.product.price * item.quantity;
+          salesMap.set(key, current);
+        });
+      });
+
+    return Array.from(salesMap.entries())
+      .map(([category, data]) => ({ category, ...data }))
+      .sort((left, right) => right.units - left.units);
+  }, [orders]);
 
   async function handleRetrain() {
     setIsTraining(true);
@@ -189,6 +212,33 @@ export default function ForecastPage() {
             </div>
 
             <div className="space-y-6">
+              <div className="rounded-xl border border-border bg-card p-5">
+                <h2 className="font-semibold text-foreground">{t.categorySales}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{t.categorySalesHint}</p>
+                <div className="mt-4 space-y-3">
+                  {categorySales.length > 0 ? (
+                    categorySales.map((item) => (
+                      <div
+                        key={item.category}
+                        className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">{item.category}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {t.salesUnits.replace("{count}", String(item.units))}
+                          </p>
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">
+                          {formatPrice(item.revenue)}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{t.noCategorySales}</p>
+                  )}
+                </div>
+              </div>
+
               <div className="rounded-xl border border-border bg-card p-5">
                 <h2 className="font-semibold text-foreground">{t.howToRead}</h2>
                 <div className="mt-3 space-y-3 text-sm text-muted-foreground">

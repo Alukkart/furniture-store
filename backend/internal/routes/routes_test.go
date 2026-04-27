@@ -93,7 +93,7 @@ func TestLoginCreatesAuditLog(t *testing.T) {
 	app, db := setupTestApp(t)
 
 	resp := performJSONRequest(t, app, http.MethodPost, "/api/auth/login", map[string]string{
-		"email":    "admin@mebel-dom.ru",
+		"email":    "admin@maison.co",
 		"password": "admin123",
 	}, nil)
 
@@ -113,7 +113,7 @@ func TestLoginCreatesAuditLog(t *testing.T) {
 func TestTokenEndpointReturnsOAuthPayload(t *testing.T) {
 	app, _ := setupTestApp(t)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/auth/token", bytes.NewBufferString("username=admin%40mebel-dom.ru&password=admin123&grant_type=password"))
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/token", bytes.NewBufferString("username=admin%40maison.co&password=admin123&grant_type=password"))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := app.Test(req)
@@ -145,7 +145,7 @@ func TestTokenEndpointReturnsOAuthPayload(t *testing.T) {
 
 func TestProductCreateRequiresAuthentication(t *testing.T) {
 	app, _ := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
+	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
 
 	payload := map[string]any{
 		"id":          "p-admin",
@@ -207,7 +207,7 @@ func TestCreateOrderRollsBackOnInsufficientStock(t *testing.T) {
 
 func TestManagerCanUpdateOrderStatus(t *testing.T) {
 	app, db := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
+	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
 	orderID := mustFindOrderIDByAddress(t, db, "г. Екатеринбург, ул. Малышева, д. 18, кв. 24")
 
 	resp := performJSONRequest(t, app, http.MethodPatch, "/api/orders/"+orderID+"/status", map[string]any{
@@ -236,7 +236,7 @@ func TestManagerCanUpdateOrderStatus(t *testing.T) {
 
 func TestForecastRequiresAuthentication(t *testing.T) {
 	app, _ := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
+	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
 
 	resp := performJSONRequest(t, app, http.MethodGet, "/api/forecast?months=3", nil, nil)
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -255,7 +255,7 @@ func TestLoginRejectsInvalidCredentials(t *testing.T) {
 	app, _ := setupTestApp(t)
 
 	resp := performJSONRequest(t, app, http.MethodPost, "/api/auth/login", map[string]string{
-		"email":    "admin@mebel-dom.ru",
+		"email":    "admin@maison.co",
 		"password": "wrong-password",
 	}, nil)
 
@@ -266,7 +266,7 @@ func TestLoginRejectsInvalidCredentials(t *testing.T) {
 
 func TestManagerCannotDeleteProduct(t *testing.T) {
 	app, db := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
+	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
 	productID := mustFindProductIDBySKU(t, db, "SOF-HVNS-BEI")
 
 	resp := performJSONRequest(t, app, http.MethodDelete, "/api/products/"+productID, nil, map[string]string{
@@ -310,7 +310,7 @@ func TestCreateOrderSuccess(t *testing.T) {
 
 func TestForecastAccessibleByExecutive(t *testing.T) {
 	app, _ := setupTestApp(t)
-	executiveToken := loginAndGetToken(t, app, "executive@mebel-dom.ru", "executive123")
+	executiveToken := loginAndGetToken(t, app, "executive@maison.co", "executive123")
 
 	resp := performJSONRequest(t, app, http.MethodGet, "/api/forecast?months=3", nil, map[string]string{
 		"Authorization": "Bearer " + executiveToken,
@@ -323,8 +323,8 @@ func TestForecastAccessibleByExecutive(t *testing.T) {
 
 func TestNonAdminCannotBlockUser(t *testing.T) {
 	app, db := setupTestApp(t)
-	managerToken := loginAndGetToken(t, app, "manager@mebel-dom.ru", "manager123")
-	userID := mustFindUserIDByEmail(t, db, "warehouse@mebel-dom.ru")
+	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
+	userID := mustFindUserIDByEmail(t, db, "warehouse@maison.co")
 
 	resp := performJSONRequest(t, app, http.MethodPatch, "/api/users/"+userID+"/block", map[string]any{
 		"is_blocked": true,

@@ -26,6 +26,20 @@ var (
 	seedDeskProductID      = seedID("p", "2025-02-01T08:50:00Z")
 	seedLampProductID      = seedID("p", "2025-02-01T09:00:00Z")
 	seedRugProductID       = seedID("p", "2025-02-01T09:10:00Z")
+	seedTvStandProductID   = seedID("p", "2025-02-01T09:20:00Z")
+	seedCoffeeTableID      = seedID("p", "2025-02-01T09:30:00Z")
+	seedNightstandID       = seedID("p", "2025-02-01T09:40:00Z")
+	seedDresserID          = seedID("p", "2025-02-01T09:50:00Z")
+	seedSideboardID        = seedID("p", "2025-02-01T10:00:00Z")
+	seedBarChairID         = seedID("p", "2025-02-01T10:10:00Z")
+	seedOfficeChairID      = seedID("p", "2025-02-01T10:20:00Z")
+	seedWallShelfID        = seedID("p", "2025-02-01T10:30:00Z")
+	seedWardrobeID         = seedID("p", "2025-02-01T10:40:00Z")
+	seedConsoleID          = seedID("p", "2025-02-01T10:50:00Z")
+	seedTableLampID        = seedID("p", "2025-02-01T11:00:00Z")
+	seedPendantLightID     = seedID("p", "2025-02-01T11:10:00Z")
+	seedThrowID            = seedID("p", "2025-02-01T11:20:00Z")
+	seedCurtainsID         = seedID("p", "2025-02-01T11:30:00Z")
 
 	seedCustomer1ID = seedID("c", "2025-02-12T10:00:00Z")
 	seedCustomer2ID = seedID("c", "2025-02-12T10:10:00Z")
@@ -96,10 +110,10 @@ func seedRolesAndUsers(db *gorm.DB) error {
 	}
 
 	users := []models.User{
-		{ID: seedAdminUserID, Email: "admin@mebel-dom.ru", Name: "Администратор", RoleID: roleID[models.RoleAdmin], PasswordHash: hashPassword("admin123"), IsBlocked: false},
-		{ID: seedManagerUserID, Email: "manager@mebel-dom.ru", Name: "Менеджер", RoleID: roleID[models.RoleManager], PasswordHash: hashPassword("manager123"), IsBlocked: false},
-		{ID: seedWarehouseUserID, Email: "warehouse@mebel-dom.ru", Name: "Кладовщик", RoleID: roleID[models.RoleWarehouse], PasswordHash: hashPassword("warehouse123"), IsBlocked: false},
-		{ID: seedExecutiveUserID, Email: "executive@mebel-dom.ru", Name: "Руководитель", RoleID: roleID[models.RoleExecutive], PasswordHash: hashPassword("executive123"), IsBlocked: false},
+		{ID: seedAdminUserID, Email: "admin@maison.co", Name: "Администратор", RoleID: roleID[models.RoleAdmin], PasswordHash: hashPassword("admin123"), IsBlocked: false},
+		{ID: seedManagerUserID, Email: "manager@maison.co", Name: "Менеджер", RoleID: roleID[models.RoleManager], PasswordHash: hashPassword("manager123"), IsBlocked: false},
+		{ID: seedWarehouseUserID, Email: "warehouse@maison.co", Name: "Кладовщик", RoleID: roleID[models.RoleWarehouse], PasswordHash: hashPassword("warehouse123"), IsBlocked: false},
+		{ID: seedExecutiveUserID, Email: "executive@maison.co", Name: "Руководитель", RoleID: roleID[models.RoleExecutive], PasswordHash: hashPassword("executive123"), IsBlocked: false},
 	}
 
 	for _, user := range users {
@@ -328,8 +342,8 @@ func seedAuditLogs(db *gorm.DB) error {
 	}
 
 	logs := []models.AuditLog{
-		{ID: seedAuditLog1ID, Action: "Обновление товара", Category: models.AuditCategoryProduct, User: "admin@mebel-dom.ru", Entity: "product", EntityID: seedSofaProductID, Details: "Цена товара «Модульный диван „Гавань“» изменена с 2 499 ₽ до 2 199 ₽", Timestamp: parseTime("2025-02-26T09:15:00Z"), Severity: models.AuditSeverityInfo, Result: "ok"},
-		{ID: seedAuditLog2ID, Action: "Смена статуса заказа", Category: models.AuditCategoryOrder, User: "manager@mebel-dom.ru", Entity: "order", EntityID: seedOrder2ID, Details: "Статус заказа изменён на «Передан в доставку»", Timestamp: parseTime("2025-02-26T10:30:00Z"), Severity: models.AuditSeverityInfo, Result: "ok"},
+		{ID: seedAuditLog1ID, Action: "Обновление товара", Category: models.AuditCategoryProduct, User: "admin@maison.co", Entity: "product", EntityID: seedSofaProductID, Details: "Цена товара «Модульный диван „Гавань“» изменена с 2 499 ₽ до 2 199 ₽", Timestamp: parseTime("2025-02-26T09:15:00Z"), Severity: models.AuditSeverityInfo, Result: "ok"},
+		{ID: seedAuditLog2ID, Action: "Смена статуса заказа", Category: models.AuditCategoryOrder, User: "manager@mmaison.co", Entity: "order", EntityID: seedOrder2ID, Details: "Статус заказа изменён на «Передан в доставку»", Timestamp: parseTime("2025-02-26T10:30:00Z"), Severity: models.AuditSeverityInfo, Result: "ok"},
 		{ID: seedAuditLog3ID, Action: "Неудачная попытка входа", Category: models.AuditCategoryUser, User: "неизвестный пользователь", Entity: "user", Details: "Зафиксировано 3 неудачных попытки входа", Timestamp: parseTime("2025-02-23T03:15:00Z"), Severity: models.AuditSeverityCritical, Result: "failed"},
 	}
 	return db.Create(&logs).Error

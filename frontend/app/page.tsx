@@ -104,7 +104,7 @@ export default function HomePage() {
                     {t.shopNow} <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
-                    href="/shop?category=Living Room"
+                    href="/shop"
                     className="inline-flex items-center gap-2 border border-primary-foreground/50 text-primary-foreground px-7 py-3.5 rounded font-medium hover:bg-primary-foreground/10 transition-colors"
                   >
                     {t.viewCollections}
@@ -120,7 +120,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {perks.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
                     <Icon className="w-4 h-4 text-accent" />
                   </div>
                   <div>
@@ -156,7 +156,7 @@ export default function HomePage() {
               <Link
                 key={cat.name}
                 href={cat.href}
-                className="group relative aspect-[3/4] overflow-hidden rounded-lg"
+                className="group relative aspect-3/4 overflow-hidden rounded-lg"
               >
                 <Image
                   src={cat.image}
@@ -164,7 +164,7 @@ export default function HomePage() {
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/20 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-foreground/70 via-foreground/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5">
                   <h3 className="font-serif text-xl font-bold text-primary-foreground">
                     {translateCategory(locale, cat.name)}

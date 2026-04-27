@@ -26,7 +26,7 @@ export default function ProductCard({ product, className }: Props) {
   return (
     <article
       className={cn(
-        "group bg-card rounded-lg overflow-hidden border border-border hover:shadow-lg transition-all duration-300",
+        "group flex h-full flex-col rounded-lg border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg",
         className
       )}
     >
@@ -46,7 +46,7 @@ export default function ProductCard({ product, className }: Props) {
         </div>
       </Link>
 
-      <div className="p-4">
+      <div className="flex flex-1 flex-col p-4">
         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
           {translateCategory(locale, product.category)}
         </p>
@@ -65,7 +65,16 @@ export default function ProductCard({ product, className }: Props) {
             </span>
           )}
         </div>
-        <div className="mt-4">
+        {product.stock <= 5 && product.stock > 0 && (
+          <p className="mt-2 text-xs text-accent font-medium">
+            {t.onlyLeft.replace("{count}", String(product.stock))}
+          </p>
+        )}
+        {product.stock === 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">{t.outOfStock}</p>
+        )}
+
+        <div className="mt-auto pt-4">
           {quantityInCart > 0 ? (
             <div className="flex w-full items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-1">
               <button
@@ -104,15 +113,6 @@ export default function ProductCard({ product, className }: Props) {
             </button>
           )}
         </div>
-
-        {product.stock <= 5 && product.stock > 0 && (
-          <p className="mt-2 text-xs text-accent font-medium">
-            {t.onlyLeft.replace("{count}", String(product.stock))}
-          </p>
-        )}
-        {product.stock === 0 && (
-          <p className="mt-2 text-xs text-muted-foreground">{t.outOfStock}</p>
-        )}
       </div>
     </article>
   );
