@@ -1,307 +1,308 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, Suspense } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import {useSearchParams} from "next/navigation";
+import {useEffect, useMemo, useState, Suspense} from "react";
+import {SlidersHorizontal, X} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
-import { CATEGORY_VALUES, normalizeCategoryValue } from "@/lib/categories";
-import { formatPrice } from "@/lib/currency";
-import { usePreferences } from "@/lib/preferences";
-import { siteText, translateCategory } from "@/lib/i18n";
-import { useStore } from "@/lib/store";
+import {CATEGORY_VALUES, normalizeCategoryValue} from "@/lib/categories";
+import {formatPrice} from "@/lib/currency";
+import {usePreferences} from "@/lib/preferences";
+import {siteText, translateCategory} from "@/lib/i18n";
+import {useStore} from "@/lib/store";
 
 const CATEGORIES = ["All", ...CATEGORY_VALUES];
 const SORT_VALUES = ["featured", "price-asc", "price-desc", "name"] as const;
 
 function normalizeSortValue(value: string | null) {
-  return SORT_VALUES.includes((value ?? "") as (typeof SORT_VALUES)[number])
-    ? (value as (typeof SORT_VALUES)[number])
-    : "featured";
+    return SORT_VALUES.includes((value ?? "") as (typeof SORT_VALUES)[number])
+        ? (value as (typeof SORT_VALUES)[number])
+        : "featured";
 }
 
 function clampPrice(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+    return Math.min(Math.max(value, min), max);
 }
 
 function ShopContent() {
-  const searchParams = useSearchParams();
-  const initialCategory = normalizeCategoryValue(searchParams.get("category") || "All");
-  const initialSale = searchParams.get("sale") === "true";
-  const initialSort = normalizeSortValue(searchParams.get("sort"));
+    const searchParams = useSearchParams();
+    const initialCategory = normalizeCategoryValue(searchParams.get("category") || "All");
+    const initialSale = searchParams.get("sale") === "true";
+    const initialSort = normalizeSortValue(searchParams.get("sort"));
 
-  const products = useStore((s) => s.products);
-  const isBootstrapping = useStore((s) => s.isBootstrapping);
-  const locale = usePreferences((s) => s.locale);
-  const t = siteText[locale].shop;
-  const [category, setCategory] = useState(initialCategory);
-  const [sort, setSort] = useState<(typeof SORT_VALUES)[number]>(initialSort);
-  const [saleOnly, setSaleOnly] = useState(initialSale);
-  const [minPrice, setMinPrice] = useState<number | null>(null);
-  const [maxPrice, setMaxPrice] = useState<number | null>(null);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const sortOptions = [
-    { value: "featured", label: t.featured },
-    { value: "price-asc", label: t.priceAsc },
-    { value: "price-desc", label: t.priceDesc },
-    { value: "name", label: t.name },
-  ];
+    const products = useStore((s) => s.products);
+    const isBootstrapping = useStore((s) => s.isBootstrapping);
+    const locale = usePreferences((s) => s.locale);
+    const t = siteText[locale].shop;
+    const [category, setCategory] = useState(initialCategory);
+    const [sort, setSort] = useState<(typeof SORT_VALUES)[number]>(initialSort);
+    const [saleOnly, setSaleOnly] = useState(initialSale);
+    const [minPrice, setMinPrice] = useState<number | null>(null);
+    const [maxPrice, setMaxPrice] = useState<number | null>(null);
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const sortOptions = [
+        {value: "featured", label: t.featured},
+        {value: "price-asc", label: t.priceAsc},
+        {value: "price-desc", label: t.priceDesc},
+        {value: "name", label: t.name},
+    ];
 
-  const priceBounds = useMemo(() => {
-    if (products.length === 0) {
-      return { min: 0, max: 0 };
-    }
+    const priceBounds = useMemo(() => {
+        if (products.length === 0) {
+            return {min: 0, max: 0};
+        }
 
-    return products.reduce(
-      (bounds, product) => ({
-        min: Math.min(bounds.min, product.price),
-        max: Math.max(bounds.max, product.price),
-      }),
-      { min: products[0].price, max: products[0].price }
-    );
-  }, [products]);
+        return products.reduce(
+            (bounds, product) => ({
+                min: Math.min(bounds.min, product.price),
+                max: Math.max(bounds.max, product.price),
+            }),
+            {min: products[0].price, max: products[0].price}
+        );
+    }, [products]);
 
-  useEffect(() => {
-    const nextCategory = normalizeCategoryValue(searchParams.get("category") || "All");
-    const nextSaleOnly = searchParams.get("sale") === "true";
-    const nextSort = normalizeSortValue(searchParams.get("sort"));
+    useEffect(() => {
+        const nextCategory = normalizeCategoryValue(searchParams.get("category") || "All");
+        const nextSaleOnly = searchParams.get("sale") === "true";
+        const nextSort = normalizeSortValue(searchParams.get("sort"));
 
-    setCategory(nextCategory);
-    setSaleOnly(nextSaleOnly);
-    setSort(nextSort);
+        setCategory(nextCategory);
+        setSaleOnly(nextSaleOnly);
+        setSort(nextSort);
 
-    if (products.length === 0) {
-      setMinPrice(null);
-      setMaxPrice(null);
-      return;
-    }
+        if (products.length === 0) {
+            setMinPrice(null);
+            setMaxPrice(null);
+            return;
+        }
 
-    const rawMinPrice = searchParams.get("minPrice");
-    const rawMaxPrice = searchParams.get("maxPrice");
-    const parsedMinPrice = rawMinPrice === null ? null : Number(rawMinPrice);
-    const parsedMaxPrice = rawMaxPrice === null ? null : Number(rawMaxPrice);
+        const rawMinPrice = searchParams.get("minPrice");
+        const rawMaxPrice = searchParams.get("maxPrice");
+        const parsedMinPrice = rawMinPrice === null ? null : Number(rawMinPrice);
+        const parsedMaxPrice = rawMaxPrice === null ? null : Number(rawMaxPrice);
 
-    setMinPrice(
-      parsedMinPrice !== null && !Number.isNaN(parsedMinPrice)
-        ? clampPrice(parsedMinPrice, priceBounds.min, priceBounds.max)
-        : priceBounds.min
-    );
-    setMaxPrice(
-      parsedMaxPrice !== null && !Number.isNaN(parsedMaxPrice)
-        ? clampPrice(parsedMaxPrice, priceBounds.min, priceBounds.max)
-        : priceBounds.max
-    );
-  }, [searchParams, products.length, priceBounds.min, priceBounds.max]);
+        setMinPrice(
+            parsedMinPrice !== null && !Number.isNaN(parsedMinPrice)
+                ? clampPrice(parsedMinPrice, priceBounds.min, priceBounds.max)
+                : priceBounds.min
+        );
+        setMaxPrice(
+            parsedMaxPrice !== null && !Number.isNaN(parsedMaxPrice)
+                ? clampPrice(parsedMaxPrice, priceBounds.min, priceBounds.max)
+                : priceBounds.max
+        );
+    }, [searchParams, products.length, priceBounds.min, priceBounds.max]);
 
-  const selectedMinPrice = products.length === 0 ? 0 : Math.min(minPrice ?? priceBounds.min, maxPrice ?? priceBounds.max);
-  const selectedMaxPrice = products.length === 0 ? 0 : Math.max(maxPrice ?? priceBounds.max, minPrice ?? priceBounds.min);
+    const selectedMinPrice = products.length === 0 ? 0 : Math.min(minPrice ?? priceBounds.min, maxPrice ?? priceBounds.max);
+    const selectedMaxPrice = products.length === 0 ? 0 : Math.max(maxPrice ?? priceBounds.max, minPrice ?? priceBounds.min);
 
-  const filtered = useMemo(() => {
-    let list = [...products];
+    const filtered = useMemo(() => {
+        let list = [...products];
 
-    if (category !== "All") {
-      list = list.filter((p) => normalizeCategoryValue(p.category) === normalizeCategoryValue(category));
-    }
-    if (saleOnly) list = list.filter((p) => !!p.originalPrice);
-    list = list.filter((p) => p.price >= selectedMinPrice && p.price <= selectedMaxPrice);
+        if (category !== "All") {
+            list = list.filter((p) => normalizeCategoryValue(p.category) === normalizeCategoryValue(category));
+        }
+        if (saleOnly) list = list.filter((p) => !!p.originalPrice);
+        list = list.filter((p) => p.price >= selectedMinPrice && p.price <= selectedMaxPrice);
 
-    switch (sort) {
-      case "price-asc":
-        list.sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        list.sort((a, b) => b.price - a.price);
-        break;
-      case "name":
-        list.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "featured":
-      default:
-        list.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-        break;
-    }
+        switch (sort) {
+            case "price-asc":
+                list.sort((a, b) => a.price - b.price);
+                break;
+            case "price-desc":
+                list.sort((a, b) => b.price - a.price);
+                break;
+            case "name":
+                list.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+            case "featured":
+            default:
+                list.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+                break;
+        }
 
-    return list;
-  }, [products, category, sort, saleOnly, selectedMinPrice, selectedMaxPrice]);
+        return list;
+    }, [products, category, sort, saleOnly, selectedMinPrice, selectedMaxPrice]);
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <div className="bg-secondary border-b border-border py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-2">
-              {t.browse}
-            </p>
-            <h1 className="font-serif text-4xl font-bold text-foreground">
-              {category === "All" ? t.allFurniture : translateCategory(locale, category)}
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              {filtered.length} {filtered.length === 1 ? t.piece : t.pieces} {t.available}
-            </p>
-          </div>
-        </div>
+    return (
+        <div className="min-h-screen flex flex-col">
+            <Navbar/>
+            <main className="flex-1">
+                <div className="bg-secondary border-b border-border py-12">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-2">
+                            {t.browse}
+                        </p>
+                        <h1 className="font-serif text-4xl font-bold text-foreground">
+                            {category === "All" ? t.allFurniture : translateCategory(locale, category)}
+                        </h1>
+                        <p className="text-muted-foreground mt-2">
+                            {filtered.length} {filtered.length === 1 ? t.piece : t.pieces} {t.available}
+                        </p>
+                    </div>
+                </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex flex-col lg:flex-row gap-10">
-            <aside
-              className={`lg:w-60 flex-shrink-0 ${
-                filtersOpen ? "block" : "hidden lg:block"
-              }`}
-            >
-              <div className="sticky top-24 space-y-8">
-                <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-                    {t.category}
-                  </h3>
-                  <ul className="space-y-2">
-                    {CATEGORIES.map((cat) => (
-                      <li key={cat}>
-                        <button
-                          onClick={() => setCategory(cat)}
-                          className={`text-sm w-full text-left py-1 transition-colors ${
-                            category === cat
-                              ? "font-semibold text-accent"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                    <div className="flex flex-col lg:flex-row gap-10">
+                        <aside
+                            className={`lg:w-60 flex-shrink-0 ${
+                                filtersOpen ? "block" : "hidden lg:block"
+                            }`}
                         >
-                          {translateCategory(locale, cat)}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                            <div className="sticky top-24 space-y-8">
+                                <div>
+                                    <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+                                        {t.category}
+                                    </h3>
+                                    <ul className="space-y-2">
+                                        {CATEGORIES.map((cat) => (
+                                            <li key={cat}>
+                                                <button
+                                                    onClick={() => setCategory(cat)}
+                                                    className={`text-sm w-full text-left py-1 transition-colors ${
+                                                        category === cat
+                                                            ? "font-semibold text-accent"
+                                                            : "text-muted-foreground hover:text-foreground"
+                                                    }`}
+                                                >
+                                                    {translateCategory(locale, cat)}
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
 
-                <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-                    {t.priceRange}
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs text-muted-foreground" htmlFor="shop-min-price">
-                        {t.minPrice}
-                      </label>
-                      <input
-                        id="shop-min-price"
-                        type="number"
-                        min={priceBounds.min}
-                        max={priceBounds.max}
-                        step={1}
-                        value={minPrice ?? ""}
-                        onChange={(e) => {
-                          const value = Number(e.target.value);
-                          if (Number.isNaN(value)) return;
-                          setMinPrice(Math.min(Math.max(value, priceBounds.min), priceBounds.max));
-                        }}
-                        className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                      />
+                                <div>
+                                    <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+                                        {t.priceRange}
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-xs text-muted-foreground" htmlFor="shop-min-price">
+                                                {t.minPrice}
+                                            </label>
+                                            <input
+                                                id="shop-min-price"
+                                                type="number"
+                                                min={priceBounds.min}
+                                                max={priceBounds.max}
+                                                step={1}
+                                                value={minPrice ?? ""}
+                                                onChange={(e) => {
+                                                    const value = Number(e.target.value);
+                                                    if (Number.isNaN(value)) return;
+                                                    setMinPrice(Math.min(Math.max(value, priceBounds.min), priceBounds.max));
+                                                }}
+                                                className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-muted-foreground" htmlFor="shop-max-price">
+                                                {t.maxPrice}
+                                            </label>
+                                            <input
+                                                id="shop-max-price"
+                                                type="number"
+                                                min={priceBounds.min}
+                                                max={priceBounds.max}
+                                                step={1}
+                                                value={maxPrice ?? ""}
+                                                onChange={(e) => {
+                                                    const value = Number(e.target.value);
+                                                    if (Number.isNaN(value)) return;
+                                                    setMaxPrice(Math.min(Math.max(value, priceBounds.min), priceBounds.max));
+                                                }}
+                                                className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+                                        {t.offers}
+                                    </h3>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={saleOnly}
+                                            onChange={(e) => setSaleOnly(e.target.checked)}
+                                            className="accent-accent w-4 h-4"
+                                        />
+                                        <span className="text-sm text-foreground">{t.saleOnly}</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <div className="flex-1">
+                            <div className="flex items-center justify-between mb-6 gap-4">
+                                <button
+                                    className="lg:hidden flex items-center gap-2 text-sm font-medium text-muted-foreground border border-border px-3 py-2 rounded hover:border-foreground transition-colors"
+                                    onClick={() => setFiltersOpen(!filtersOpen)}
+                                >
+                                    <SlidersHorizontal className="w-4 h-4"/>
+                                    {t.filters}
+                                </button>
+                                <select
+                                    value={sort}
+                                    onChange={(e) => setSort(normalizeSortValue(e.target.value))}
+                                    className="ml-auto bg-card border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                >
+                                    {sortOptions.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {isBootstrapping && products.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-20 text-center">
+                                    <p className="font-serif text-2xl text-foreground">{t.loadingTitle}</p>
+                                    <p className="text-muted-foreground mt-2">{t.loadingText}</p>
+                                </div>
+                            ) : filtered.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-20 text-center">
+                                    <p className="font-serif text-2xl text-foreground">{t.noProducts}</p>
+                                    <p className="text-muted-foreground mt-2">{t.adjustFilters}</p>
+                                    <button
+                                        onClick={() => {
+                                            setCategory("All");
+                                            setSaleOnly(false);
+                                            setMinPrice(priceBounds.min);
+                                            setMaxPrice(priceBounds.max);
+                                        }}
+                                        className="mt-4 flex items-center gap-1.5 text-sm text-accent hover:underline"
+                                    >
+                                        <X className="w-4 h-4"/> {t.clearFilters}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {filtered.map((product) => (
+                                        <ProductCard key={product.id} product={product}/>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground" htmlFor="shop-max-price">
-                        {t.maxPrice}
-                      </label>
-                      <input
-                        id="shop-max-price"
-                        type="number"
-                        min={priceBounds.min}
-                        max={priceBounds.max}
-                        step={1}
-                        value={maxPrice ?? ""}
-                        onChange={(e) => {
-                          const value = Number(e.target.value);
-                          if (Number.isNaN(value)) return;
-                          setMaxPrice(Math.min(Math.max(value, priceBounds.min), priceBounds.max));
-                        }}
-                        className="mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                      />
-                    </div>
-                  </div>
                 </div>
-
-                <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-                    {t.offers}
-                  </h3>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={saleOnly}
-                      onChange={(e) => setSaleOnly(e.target.checked)}
-                      className="accent-accent w-4 h-4"
-                    />
-                    <span className="text-sm text-foreground">{t.saleOnly}</span>
-                  </label>
-                </div>
-              </div>
-            </aside>
-
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-6 gap-4">
-                <button
-                  className="lg:hidden flex items-center gap-2 text-sm font-medium text-muted-foreground border border-border px-3 py-2 rounded hover:border-foreground transition-colors"
-                  onClick={() => setFiltersOpen(!filtersOpen)}
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  {t.filters}
-                </button>
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(normalizeSortValue(e.target.value))}
-                  className="ml-auto bg-card border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  {sortOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {isBootstrapping && products.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <p className="font-serif text-2xl text-foreground">{t.loadingTitle}</p>
-                  <p className="text-muted-foreground mt-2">{t.loadingText}</p>
-                </div>
-              ) : filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <p className="font-serif text-2xl text-foreground">{t.noProducts}</p>
-                  <p className="text-muted-foreground mt-2">{t.adjustFilters}</p>
-                  <button
-                    onClick={() => {
-                      setCategory("All");
-                      setSaleOnly(false);
-                      setMinPrice(priceBounds.min);
-                      setMaxPrice(priceBounds.max);
-                    }}
-                    className="mt-4 flex items-center gap-1.5 text-sm text-accent hover:underline"
-                  >
-                    <X className="w-4 h-4" /> {t.clearFilters}
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {filtered.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+            </main>
+            <Footer/>
         </div>
-      </main>
-      <Footer />
-    </div>
-  );
+    );
 }
 
 export default function ShopPage() {
-  const locale = usePreferences((s) => s.locale);
-  const loadingText = locale === "ru" ? "Загрузка..." : "Loading...";
+    const locale = usePreferences((s) => s.locale);
+    const loadingText = locale === "ru" ? "Загрузка..." : "Loading...";
 
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">{loadingText}</p></div>}>
-      <ShopContent />
-    </Suspense>
-  );
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p
+            className="text-muted-foreground">{loadingText}</p></div>}>
+            <ShopContent/>
+        </Suspense>
+    );
 }

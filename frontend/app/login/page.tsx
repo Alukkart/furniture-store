@@ -1,267 +1,274 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import {useState, useEffect} from "react";
+import {useRouter} from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowLeft } from "lucide-react";
-import { useAuth } from "@/lib/auth";
-import { usePreferences } from "@/lib/preferences";
-import { siteText } from "@/lib/i18n";
-import { useStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
+import {Eye, EyeOff, Lock, Mail, AlertCircle, ArrowLeft} from "lucide-react";
+import {useAuth} from "@/lib/auth";
+import {usePreferences} from "@/lib/preferences";
+import {siteText} from "@/lib/i18n";
+import {useStore} from "@/lib/store";
+import {cn} from "@/lib/utils";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
-  const { login, loginError, currentUser } = useAuth();
-  const bootstrap = useStore((s) => s.bootstrap);
-  const locale = usePreferences((s) => s.locale);
-  const t = siteText[locale].login;
-  const passwordToggleLabel =
-    locale === "ru"
-      ? showPassword
-        ? "Скрыть пароль"
-        : "Показать пароль"
-      : showPassword
-        ? "Hide password"
-        : "Show password";
-  const router = useRouter();
+    const {login, loginError, currentUser} = useAuth();
+    const bootstrap = useStore((s) => s.bootstrap);
+    const locale = usePreferences((s) => s.locale);
+    const t = siteText[locale].login;
+    const passwordToggleLabel =
+        locale === "ru"
+            ? showPassword
+                ? "Скрыть пароль"
+                : "Показать пароль"
+            : showPassword
+                ? "Hide password"
+                : "Show password";
+    const router = useRouter();
 
-  useEffect(() => {
-    if (currentUser) {
-      router.replace(currentUser.role === "Client" ? "/account/orders" : "/admin");
-    }
-  }, [currentUser, router]);
+    useEffect(() => {
+        if (currentUser) {
+            router.replace(currentUser.role === "Client" ? "/account/orders" : "/admin");
+        }
+    }, [currentUser, router]);
 
-  function validate() {
-    const errors: { email?: string; password?: string } = {};
-    if (!email.trim()) errors.email = t.requiredEmail;
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = t.invalidEmail;
-    if (!password) errors.password = t.requiredPassword;
-    return errors;
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const errors = validate();
-    if (Object.keys(errors).length) {
-      setFieldErrors(errors);
-      return;
-    }
-    setFieldErrors({});
-    setIsLoading(true);
-
-    const success = await login(email, password);
-
-    if (success) {
-      await bootstrap(true);
+    function validate() {
+        const errors: { email?: string; password?: string } = {};
+        if (!email.trim()) errors.email = t.requiredEmail;
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = t.invalidEmail;
+        if (!password) errors.password = t.requiredPassword;
+        return errors;
     }
 
-    setIsLoading(false);
-  }
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        const errors = validate();
+        if (Object.keys(errors).length) {
+            setFieldErrors(errors);
+            return;
+        }
+        setFieldErrors({});
+        setIsLoading(true);
 
-  return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-background">
-      <div className="hidden lg:flex flex-col justify-between relative overflow-hidden bg-primary">
-        <div className="absolute inset-0">
-          <Image
-            src="/images/hero-sofa.jpg"
-            alt="Maison & Co. interior"
-            fill
-            className="object-cover opacity-30"
-          />
-          <div className="absolute inset-0 bg-primary/70" />
-        </div>
-        <div className="relative z-10 p-12">
-          <Link href="/" className="inline-flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-primary-foreground/10 border border-primary-foreground/20 rounded-lg flex items-center justify-center">
-              <span className="font-serif font-bold text-primary-foreground text-lg">M</span>
-            </div>
-            <div>
-              <p className="font-serif font-bold text-primary-foreground text-lg leading-tight">
-                Maison & Co.
-              </p>
-              <p className="text-xs text-primary-foreground/60">{t.access}</p>
-            </div>
-          </Link>
-        </div>
-        <div className="relative z-10 p-12 space-y-6">
-          <blockquote className="space-y-3">
-            <p className="font-serif text-3xl font-medium text-primary-foreground leading-snug text-pretty">
-              "Design is not just what it looks like and feels like. Design is how it works."
-            </p>
-            <cite className="text-sm text-primary-foreground/60 not-italic">— Steve Jobs</cite>
-          </blockquote>
-          <div className="border-t border-primary-foreground/20 pt-6">
-            <p className="text-sm text-primary-foreground/70">{t.blurb}</p>
-          </div>
-        </div>
-        <div className="relative z-10 p-12">
-          <div className="flex gap-1.5">
-            <div className="w-8 h-1 rounded-full bg-primary-foreground" />
-            <div className="w-4 h-1 rounded-full bg-primary-foreground/30" />
-            <div className="w-4 h-1 rounded-full bg-primary-foreground/30" />
-          </div>
-        </div>
-      </div>
+        const success = await login(email, password);
 
-      <div className="flex flex-col justify-center px-6 py-12 lg:px-16 xl:px-24">
-        <div className="lg:hidden mb-10">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-              <span className="font-serif font-bold text-primary-foreground">M</span>
-            </div>
-            <span className="font-serif font-bold text-foreground text-xl">Maison & Co.</span>
-          </Link>
-        </div>
+        if (success) {
+            await bootstrap(true);
+        }
 
-        <div className="w-full max-w-sm mx-auto space-y-8">
-          <div className="space-y-1.5">
-            <h1 className="font-serif text-3xl font-bold text-foreground text-balance">
-              {t.welcome}
-            </h1>
-            <p className="text-muted-foreground text-sm">{t.subtitle}</p>
-          </div>
+        setIsLoading(false);
+    }
 
-          <div className="rounded-lg bg-secondary border border-border px-4 py-3">
-            <p className="text-xs font-semibold text-foreground mb-1.5">{t.demo}</p>
-            <div className="space-y-0.5 text-xs text-muted-foreground font-mono">
-              <p>admin@maison.co / admin123</p>
-              <p>manager@maison.co / manager123</p>
-              <p>warehouse@maison.co / warehouse123</p>
-              <p>executive@maison.co / executive123</p>
-              <p>{t.clientHint}</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-            {loginError && !isLoading && (
-              <div className="flex items-center gap-2.5 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3">
-                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
-                <p className="text-sm text-destructive font-medium">{loginError}</p>
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
-                {t.email}
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
-                  }}
-                  placeholder="admin@maison.co"
-                  className={cn(
-                    "w-full pl-10 pr-4 py-2.5 rounded-lg border bg-card text-foreground placeholder:text-muted-foreground/50 text-sm outline-none transition-all",
-                    "focus:ring-2 focus:ring-ring focus:border-transparent",
-                    fieldErrors.email
-                      ? "border-destructive ring-1 ring-destructive"
-                      : "border-input"
-                  )}
-                />
-              </div>
-              {fieldErrors.email && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> {fieldErrors.email}
-                </p>
-              )}
+    return (
+        <div className="min-h-screen grid lg:grid-cols-2 bg-background">
+            <div className="hidden lg:flex flex-col justify-between relative overflow-hidden bg-primary">
+                <div className="absolute inset-0">
+                    <Image
+                        src="/images/hero-sofa.jpg"
+                        alt="Maison & Co. interior"
+                        fill
+                        className="object-cover opacity-30"
+                    />
+                    <div className="absolute inset-0 bg-primary/70"/>
+                </div>
+                <div className="relative z-10 p-12">
+                    <Link href="/" className="inline-flex items-center gap-3 group">
+                        <div
+                            className="w-10 h-10 bg-primary-foreground/10 border border-primary-foreground/20 rounded-lg flex items-center justify-center">
+                            <span className="font-serif font-bold text-primary-foreground text-lg">M</span>
+                        </div>
+                        <div>
+                            <p className="font-serif font-bold text-primary-foreground text-lg leading-tight">
+                                Maison & Co.
+                            </p>
+                            <p className="text-xs text-primary-foreground/60">{t.access}</p>
+                        </div>
+                    </Link>
+                </div>
+                <div className="relative z-10 p-12 space-y-6">
+                    <blockquote className="space-y-3">
+                        <p className="font-serif text-3xl font-medium text-primary-foreground leading-snug text-pretty">
+                            "Design is not just what it looks like and feels like. Design is how it works."
+                        </p>
+                        <cite className="text-sm text-primary-foreground/60 not-italic">— Steve Jobs</cite>
+                    </blockquote>
+                    <div className="border-t border-primary-foreground/20 pt-6">
+                        <p className="text-sm text-primary-foreground/70">{t.blurb}</p>
+                    </div>
+                </div>
+                <div className="relative z-10 p-12">
+                    <div className="flex gap-1.5">
+                        <div className="w-8 h-1 rounded-full bg-primary-foreground"/>
+                        <div className="w-4 h-1 rounded-full bg-primary-foreground/30"/>
+                        <div className="w-4 h-1 rounded-full bg-primary-foreground/30"/>
+                    </div>
+                </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
-                {t.password}
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                  }}
-                  placeholder="••••••••"
-                  className={cn(
-                    "w-full pl-10 pr-11 py-2.5 rounded-lg border bg-card text-foreground placeholder:text-muted-foreground/50 text-sm outline-none transition-all",
-                    "focus:ring-2 focus:ring-ring focus:border-transparent",
-                    fieldErrors.password
-                      ? "border-destructive ring-1 ring-destructive"
-                      : "border-input"
-                  )}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                  aria-label={passwordToggleLabel}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {fieldErrors.password && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> {fieldErrors.password}
-                </p>
-              )}
-            </div>
+            <div className="flex flex-col justify-center px-6 py-12 lg:px-16 xl:px-24">
+                <div className="lg:hidden mb-10">
+                    <Link href="/" className="inline-flex items-center gap-2.5">
+                        <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
+                            <span className="font-serif font-bold text-primary-foreground">M</span>
+                        </div>
+                        <span className="font-serif font-bold text-foreground text-xl">Maison & Co.</span>
+                    </Link>
+                </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={cn(
-                "w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all",
-                isLoading
-                  ? "opacity-70 cursor-not-allowed"
-                  : "hover:opacity-90 active:scale-[0.99]"
-              )}
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
+                <div className="w-full max-w-sm mx-auto space-y-8">
+                    <div className="space-y-1.5">
+                        <h1 className="font-serif text-3xl font-bold text-foreground text-balance">
+                            {t.welcome}
+                        </h1>
+                        <p className="text-muted-foreground text-sm">{t.subtitle}</p>
+                    </div>
+
+                    <div className="rounded-lg bg-secondary border border-border px-4 py-3">
+                        <p className="text-xs font-semibold text-foreground mb-1.5">{t.demo}</p>
+                        <div className="space-y-0.5 text-xs text-muted-foreground font-mono">
+                            <p>admin@maison.co / admin123</p>
+                            <p>manager@maison.co / manager123</p>
+                            <p>warehouse@maison.co / warehouse123</p>
+                            <p>executive@maison.co / executive123</p>
+                            <p>{t.clientHint}</p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                        {loginError && !isLoading && (
+                            <div
+                                className="flex items-center gap-2.5 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3">
+                                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0"/>
+                                <p className="text-sm text-destructive font-medium">{loginError}</p>
+                            </div>
+                        )}
+
+                        <div className="space-y-1.5">
+                            <label htmlFor="email" className="text-sm font-medium text-foreground">
+                                {t.email}
+                            </label>
+                            <div className="relative">
+                                <Mail
+                                    className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"/>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    value={email}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (fieldErrors.email) setFieldErrors((prev) => ({...prev, email: undefined}));
+                                    }}
+                                    placeholder="admin@maison.co"
+                                    className={cn(
+                                        "w-full pl-10 pr-4 py-2.5 rounded-lg border bg-card text-foreground placeholder:text-muted-foreground/50 text-sm outline-none transition-all",
+                                        "focus:ring-2 focus:ring-ring focus:border-transparent",
+                                        fieldErrors.email
+                                            ? "border-destructive ring-1 ring-destructive"
+                                            : "border-input"
+                                    )}
+                                />
+                            </div>
+                            {fieldErrors.email && (
+                                <p className="text-xs text-destructive flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3"/> {fieldErrors.email}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label htmlFor="password" className="text-sm font-medium text-foreground">
+                                {t.password}
+                            </label>
+                            <div className="relative">
+                                <Lock
+                                    className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"/>
+                                <input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    autoComplete="current-password"
+                                    value={password}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (fieldErrors.password) setFieldErrors((prev) => ({
+                                            ...prev,
+                                            password: undefined
+                                        }));
+                                    }}
+                                    placeholder="••••••••"
+                                    className={cn(
+                                        "w-full pl-10 pr-11 py-2.5 rounded-lg border bg-card text-foreground placeholder:text-muted-foreground/50 text-sm outline-none transition-all",
+                                        "focus:ring-2 focus:ring-ring focus:border-transparent",
+                                        fieldErrors.password
+                                            ? "border-destructive ring-1 ring-destructive"
+                                            : "border-input"
+                                    )}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                                    aria-label={passwordToggleLabel}
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
+                                </button>
+                            </div>
+                            {fieldErrors.password && (
+                                <p className="text-xs text-destructive flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3"/> {fieldErrors.password}
+                                </p>
+                            )}
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className={cn(
+                                "w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all",
+                                isLoading
+                                    ? "opacity-70 cursor-not-allowed"
+                                    : "hover:opacity-90 active:scale-[0.99]"
+                            )}
+                        >
+                            {isLoading ? (
+                                <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  {t.signingIn}
+                                    {t.signingIn}
                 </span>
-              ) : (
-                t.signIn
-              )}
-            </button>
-          </form>
+                            ) : (
+                                t.signIn
+                            )}
+                        </button>
+                    </form>
 
-          <div className="pt-2 border-t border-border">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                {t.back}
-              </Link>
-              <Link
-                href="/register"
-                className="text-sm font-medium text-accent hover:opacity-80 transition-opacity"
-              >
-                {t.createClient}
-              </Link>
+                    <div className="pt-2 border-t border-border">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <Link
+                                href="/"
+                                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <ArrowLeft className="w-3.5 h-3.5"/>
+                                {t.back}
+                            </Link>
+                            <Link
+                                href="/register"
+                                className="text-sm font-medium text-accent hover:opacity-80 transition-opacity"
+                            >
+                                {t.createClient}
+                            </Link>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
