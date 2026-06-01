@@ -144,7 +144,7 @@ export default function LoginPage() {
                         {loginError && !isLoading && (
                             <div
                                 className="flex items-center gap-2.5 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3">
-                                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0"/>
+                                <AlertCircle className="w-4 h-4 text-destructive shrink-0"/>
                                 <p className="text-sm text-destructive font-medium">{loginError}</p>
                             </div>
                         )}

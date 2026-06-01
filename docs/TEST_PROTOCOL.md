@@ -14,7 +14,41 @@
 | 9 | Forecast endpoint by executive | 200 + rows | Pass (`go test`, route integration) |
 | 10 | User block endpoint by non-admin | 403 | Pass (`go test`, route integration) |
 
-## UI (10 checks)
+## Frontend automated (13 Vitest checks)
+| # | Check | Expected | Actual |
+|---|---|---|---|
+| 1 | Email normalization | Trim + lowercase | Pass (`npm test`, Vitest) |
+| 2 | Invalid email rejection | Invalid formats return false | Pass (`npm test`, Vitest) |
+| 3 | Russian name sanitizing | Digits/symbols removed, hyphen preserved | Pass (`npm test`, Vitest) |
+| 4 | Personal name validation | Capitalized Russian name accepted | Pass (`npm test`, Vitest) |
+| 5 | Full name validation | Two or three name parts accepted | Pass (`npm test`, Vitest) |
+| 6 | City/location validation | Russian city accepted, Latin value rejected | Pass (`npm test`, Vitest) |
+| 7 | Address validation | Address must include letters and digits | Pass (`npm test`, Vitest) |
+| 8 | Russian phone normalization | `8...` and 10-digit forms normalize to `7...` | Pass (`npm test`, Vitest) |
+| 9 | Phone and postal code validation | Correct lengths accepted, short values rejected | Pass (`npm test`, Vitest) |
+| 10 | Cardholder validation | Two-part name accepted, one-part name rejected | Pass (`npm test`, Vitest) |
+| 11 | Card number validation | Formatting + Luhn check | Pass (`npm test`, Vitest) |
+| 12 | Card expiry validation | Current/future month accepted, expired/invalid month rejected | Pass (`npm test`, Vitest) |
+| 13 | CVV validation | Three or four digits accepted | Pass (`npm test`, Vitest) |
+
+## Frontend components (13 Vitest checks)
+| # | Check | Expected | Actual |
+|---|---|---|---|
+| 1 | Product card content | Title, sale badge, prices, and low-stock message are rendered | Pass (`npm test`, Vitest + jsdom) |
+| 2 | Product card add to cart | Add button writes product to cart store | Pass (`npm test`, Vitest + jsdom) |
+| 3 | Product card quantity controls | Increase and decrease update cart quantity | Pass (`npm test`, Vitest + jsdom) |
+| 4 | Product card out-of-stock state | Add button is disabled and stock message is shown | Pass (`npm test`, Vitest + jsdom) |
+| 5 | Product form empty draft | New product defaults are initialized | Pass (`npm test`, Vitest + jsdom) |
+| 6 | Product form initial render | Existing product fields and preview are shown | Pass (`npm test`, Vitest + jsdom) |
+| 7 | Product form required validation | Empty required fields block submit | Pass (`npm test`, Vitest + jsdom) |
+| 8 | Product form submit payload | Text is trimmed, numbers converted, featured flag submitted | Pass (`npm test`, Vitest + jsdom) |
+| 9 | Order form initial render | Order fields, line total, and total are shown | Pass (`npm test`, Vitest + jsdom) |
+| 10 | Order form item editing | Add and remove item controls update rows | Pass (`npm test`, Vitest + jsdom) |
+| 11 | Order form customer validation | Invalid customer, email, or address blocks submit | Pass (`npm test`, Vitest + jsdom) |
+| 12 | Order form quantity validation | Zero quantity blocks submit | Pass (`npm test`, Vitest + jsdom) |
+| 13 | Order form submit payload | Customer, email, address, status, product, and quantity are submitted correctly | Pass (`npm test`, Vitest + jsdom) |
+
+## UI manual (10 checks)
 | # | Check | Expected | Actual |
 |---|---|---|---|
 | 1 | Login page validation | Inline errors | Implemented; page compiles in production build |
