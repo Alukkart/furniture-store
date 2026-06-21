@@ -13,6 +13,11 @@
 | 8 | Order status update by warehouse/manager | 200 | Pass (`go test`, route integration) |
 | 9 | Forecast endpoint by executive | 200 + rows | Pass (`go test`, route integration) |
 | 10 | User block endpoint by non-admin | 403 | Pass (`go test`, route integration) |
+| 11 | Invalid order status transition (pending → delivered) | 400 | Pass (`go test`, route integration) |
+| 12 | Order cancellation restores reserved stock | Stock returns to initial value | Pass (`go test`, route integration) |
+| 13 | Client requests a foreign order by ID | 403 | Pass (`go test`, route integration) |
+| 14 | Blocked user acts with a still-valid token | 403 | Pass (`go test`, route integration) |
+| 15 | Products filtered by category and minPrice on the server | 200 + filtered list | Pass (`go test`, route integration) |
 
 ## Frontend automated (13 Vitest checks)
 | # | Check | Expected | Actual |

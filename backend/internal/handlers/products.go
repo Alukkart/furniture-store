@@ -25,15 +25,43 @@ func NewProductHandler(db *gorm.DB) *ProductHandler {
 	}
 }
 
-// List returns all products.
+// List returns products with optional filtering and pagination.
 // @Summary List products
 // @Tags products
 // @Produce json
+// @Param category query string false "Filter by category name"
+// @Param minPrice query int false "Minimum price"
+// @Param maxPrice query int false "Maximum price"
+// @Param q query string false "Search by name or SKU"
+// @Param limit query int false "Page size"
+// @Param offset query int false "Page offset"
 // @Success 200 {array} models.Product
+// @Failure 400 {object} handlers.errorResponse
 // @Failure 500 {object} handlers.errorResponse
 // @Router /products [get]
 func (h *ProductHandler) List(c *fiber.Ctx) error {
-	products, err := h.service.List()
+	filter := repositories.ProductFilter{
+		Category: c.Query("category"),
+		Query:    c.Query("q"),
+		Limit:    c.QueryInt("limit"),
+		Offset:   c.QueryInt("offset"),
+	}
+	if raw := strings.TrimSpace(c.Query("minPrice")); raw != "" {
+		value := int64(c.QueryInt("minPrice", -1))
+		if value < 0 {
+			return fiber.NewError(fiber.StatusBadRequest, "minPrice must be a non-negative number")
+		}
+		filter.MinPrice = &value
+	}
+	if raw := strings.TrimSpace(c.Query("maxPrice")); raw != "" {
+		value := int64(c.QueryInt("maxPrice", -1))
+		if value < 0 {
+			return fiber.NewError(fiber.StatusBadRequest, "maxPrice must be a non-negative number")
+		}
+		filter.MaxPrice = &value
+	}
+
+	products, err := h.service.List(filter)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to fetch products")
 	}

@@ -17,8 +17,8 @@ func NewAuditService(repo *repositories.AuditRepository) *AuditService {
 	return &AuditService{repo: repo}
 }
 
-func (s *AuditService) List() ([]models.AuditLog, error) {
-	return s.repo.List()
+func (s *AuditService) List(filter repositories.AuditFilter) ([]models.AuditLog, error) {
+	return s.repo.List(filter)
 }
 
 func (s *AuditService) Create(log models.AuditLog) (models.AuditLog, error) {

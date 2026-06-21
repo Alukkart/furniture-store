@@ -7,6 +7,7 @@ import (
 	"backend/internal/security"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 const LocalsClaimsKey = "claims"
@@ -23,6 +24,26 @@ func RequireAuth(secret string) fiber.Handler {
 			return fiber.NewError(fiber.StatusUnauthorized, "invalid token")
 		}
 		c.Locals(LocalsClaimsKey, claims)
+		return c.Next()
+	}
+}
+
+// RequireActiveUser проверяет состояние учетной записи по базе при каждом
+// защищенном запросе: заблокированный пользователь получает 403 даже при
+// действующем токене.
+func RequireActiveUser(db *gorm.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		claims, ok := c.Locals(LocalsClaimsKey).(security.Claims)
+		if !ok {
+			return fiber.NewError(fiber.StatusUnauthorized, "missing auth context")
+		}
+		var user models.User
+		if err := db.Select("id", "is_blocked").First(&user, "id = ?", claims.UserID).Error; err != nil {
+			return fiber.NewError(fiber.StatusUnauthorized, "unknown user")
+		}
+		if user.IsBlocked {
+			return fiber.NewError(fiber.StatusForbidden, "user is blocked")
+		}
 		return c.Next()
 	}
 }

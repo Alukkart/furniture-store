@@ -15,7 +15,8 @@ import {
   updateOrder as updateOrderRequest,
   updateOrderStatus as updateOrderStatusRequest,
 } from "@/services/orders";
-import { listAuditLogs, createAuditLog as createAuditLogRequest } from "@/services/auditLogs";
+import { listAuditLogs } from "@/services/auditLogs";
+import { logoutRequest } from "@/services/auth";
 import { getApiErrorMessage } from "@/services/http";
 
 export type { Product, CartItem, Order, AuditLog };
@@ -41,7 +42,7 @@ type StoreState = {
     status: Order["status"],
     adminUser?: string
   ) => Promise<Order | null>;
-  addAuditLog: (log: Omit<AuditLog, "id" | "timestamp">) => Promise<AuditLog | null>;
+  recordLogout: () => Promise<void>;
   placeOrder: (customer: string, email: string, address: string) => Promise<Order | null>;
 };
 
@@ -194,14 +195,12 @@ export const useStore = create<StoreState>()(
         }
       },
 
-      addAuditLog: async (log) => {
+      recordLogout: async () => {
         try {
-          const created = await createAuditLogRequest(log);
-          set((state) => ({ auditLogs: [created, ...state.auditLogs], bootstrapError: null }));
-          return created;
-        } catch (error) {
-          set({ bootstrapError: getApiErrorMessage(error, "Failed to create audit log") });
-          return null;
+          // Запись о выходе создает сервер по токену текущего пользователя.
+          await logoutRequest();
+        } catch {
+          // Выход из системы не должен блокироваться ошибкой журналирования.
         }
       },
 

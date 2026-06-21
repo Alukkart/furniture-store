@@ -8,6 +8,8 @@ import (
 
 	"backend/internal/models"
 	"backend/internal/repositories"
+
+	"gorm.io/gorm"
 )
 
 type OrderService struct {
@@ -16,6 +18,28 @@ type OrderService struct {
 
 func NewOrderService(repo *repositories.OrderRepository) *OrderService {
 	return &OrderService{repo: repo}
+}
+
+// allowedTransitions задает справочник допустимых переходов жизненного цикла заказа:
+// заказ нельзя отгрузить, минуя обработку, а отмена и доставка являются терминальными.
+var allowedTransitions = map[models.OrderState][]models.OrderState{
+	models.OrderStatusPending:    {models.OrderStatusProcessing, models.OrderStatusCancelled},
+	models.OrderStatusProcessing: {models.OrderStatusShipped, models.OrderStatusCancelled},
+	models.OrderStatusShipped:    {models.OrderStatusDelivered, models.OrderStatusCancelled},
+	models.OrderStatusDelivered:  {},
+	models.OrderStatusCancelled:  {},
+}
+
+func isTransitionAllowed(from, to models.OrderState) bool {
+	if from == to {
+		return true
+	}
+	for _, next := range allowedTransitions[from] {
+		if next == to {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *OrderService) List() ([]models.OrderResponse, error) {
@@ -46,6 +70,18 @@ func (s *OrderService) ListByCustomerEmail(email string) ([]models.OrderResponse
 		result = append(result, mapOrderResponse(order))
 	}
 	return result, nil
+}
+
+func (s *OrderService) Get(orderID string) (models.OrderResponse, error) {
+	orderID = strings.TrimSpace(orderID)
+	if orderID == "" {
+		return models.OrderResponse{}, errors.New("invalid order id")
+	}
+	order, err := s.repo.GetByID(orderID)
+	if err != nil {
+		return models.OrderResponse{}, err
+	}
+	return mapOrderResponse(order), nil
 }
 
 type CreateOrderInput struct {
@@ -127,6 +163,11 @@ func (s *OrderService) Create(input CreateOrderInput) (models.OrderResponse, err
 			return models.OrderResponse{}, saveErr
 		}
 
+		if recErr := s.repo.RecordSale(tx, product.CategoryID, item.Quantity, product.Price); recErr != nil {
+			tx.Rollback()
+			return models.OrderResponse{}, recErr
+		}
+
 		total += int64(item.Quantity) * product.Price
 		orderItems = append(orderItems, models.OrderItem{ProductID: product.ID, Qty: item.Quantity, Price: product.Price})
 	}
@@ -183,10 +224,21 @@ func (s *OrderService) UpdateStatus(orderID string, status models.OrderState) (m
 		return models.OrderResponse{}, "", err
 	}
 	prev := models.OrderState(order.StatusRef.Code)
+	if !isTransitionAllowed(prev, status) {
+		tx.Rollback()
+		return models.OrderResponse{}, "", fmt.Errorf("invalid status transition from '%s' to '%s'", prev, status)
+	}
 	statusRef, err := s.repo.FindStatusByCode(string(status))
 	if err != nil {
 		tx.Rollback()
 		return models.OrderResponse{}, "", err
+	}
+
+	if status == models.OrderStatusCancelled && prev != models.OrderStatusCancelled {
+		if err := s.restoreStock(tx, order.Items); err != nil {
+			tx.Rollback()
+			return models.OrderResponse{}, "", err
+		}
 	}
 
 	if err := s.repo.UpdateStatus(tx, &order, statusRef.ID); err != nil {
@@ -244,6 +296,10 @@ func (s *OrderService) Update(orderID string, input UpdateOrderInput) (models.Or
 		return models.OrderResponse{}, "", err
 	}
 	prev := models.OrderState(order.StatusRef.Code)
+	if !isTransitionAllowed(prev, input.Status) {
+		tx.Rollback()
+		return models.OrderResponse{}, "", fmt.Errorf("invalid status transition from '%s' to '%s'", prev, input.Status)
+	}
 
 	customer, err := s.repo.FindOrCreateCustomer(tx, input.Customer, input.Email)
 	if err != nil {
@@ -256,16 +312,15 @@ func (s *OrderService) Update(orderID string, input UpdateOrderInput) (models.Or
 		return models.OrderResponse{}, "", err
 	}
 
-	for _, item := range order.Items {
-		product, getErr := s.repo.FindProductForUpdate(tx, item.ProductID)
-		if getErr != nil {
+	// Для отмененного заказа остаток уже возвращен на склад, поэтому позиции
+	// не резервируют остаток: возврат и списание выполняются только для активных состояний.
+	holdsStock := prev != models.OrderStatusCancelled
+	reserveStock := input.Status != models.OrderStatusCancelled
+
+	if holdsStock {
+		if err := s.restoreStock(tx, order.Items); err != nil {
 			tx.Rollback()
-			return models.OrderResponse{}, "", getErr
-		}
-		product.StockQty += item.Qty
-		if saveErr := tx.Save(&product).Error; saveErr != nil {
-			tx.Rollback()
-			return models.OrderResponse{}, "", saveErr
+			return models.OrderResponse{}, "", err
 		}
 	}
 
@@ -287,15 +342,17 @@ func (s *OrderService) Update(orderID string, input UpdateOrderInput) (models.Or
 			tx.Rollback()
 			return models.OrderResponse{}, "", fmt.Errorf("product %s not found", productID)
 		}
-		if product.StockQty < item.Quantity {
-			tx.Rollback()
-			return models.OrderResponse{}, "", fmt.Errorf("insufficient stock for %s", product.Name)
-		}
+		if reserveStock {
+			if product.StockQty < item.Quantity {
+				tx.Rollback()
+				return models.OrderResponse{}, "", fmt.Errorf("insufficient stock for %s", product.Name)
+			}
 
-		product.StockQty -= item.Quantity
-		if saveErr := tx.Save(&product).Error; saveErr != nil {
-			tx.Rollback()
-			return models.OrderResponse{}, "", saveErr
+			product.StockQty -= item.Quantity
+			if saveErr := tx.Save(&product).Error; saveErr != nil {
+				tx.Rollback()
+				return models.OrderResponse{}, "", saveErr
+			}
 		}
 
 		total += int64(item.Quantity) * product.Price
@@ -338,6 +395,20 @@ func (s *OrderService) Update(orderID string, input UpdateOrderInput) (models.Or
 		return models.OrderResponse{}, "", err
 	}
 	return mapOrderResponse(updated), prev, nil
+}
+
+func (s *OrderService) restoreStock(tx *gorm.DB, items []models.OrderItem) error {
+	for _, item := range items {
+		product, err := s.repo.FindProductForUpdate(tx, item.ProductID)
+		if err != nil {
+			return err
+		}
+		product.StockQty += item.Qty
+		if err := tx.Save(&product).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func mapOrderResponse(order models.Order) models.OrderResponse {

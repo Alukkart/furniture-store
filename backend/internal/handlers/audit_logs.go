@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"backend/internal/models"
 	"backend/internal/repositories"
 	"backend/internal/services"
 
@@ -17,46 +16,33 @@ func NewAuditLogHandler(db *gorm.DB) *AuditLogHandler {
 	return &AuditLogHandler{service: services.NewAuditService(repositories.NewAuditRepository(db))}
 }
 
-// List returns audit logs.
+// List returns audit logs with optional filtering and pagination.
 // @Summary List audit logs
 // @Tags audit
 // @Produce json
 // @Security BearerAuth
 // @Security OAuth2Password
+// @Param category query string false "Filter by category (product/order/user/system)"
+// @Param severity query string false "Filter by severity (info/warning/critical)"
+// @Param q query string false "Search in action, details and user"
+// @Param limit query int false "Page size"
+// @Param offset query int false "Page offset"
 // @Success 200 {array} models.AuditLog
 // @Failure 401 {object} handlers.errorResponse
 // @Failure 403 {object} handlers.errorResponse
 // @Failure 500 {object} handlers.errorResponse
 // @Router /audit-logs [get]
 func (h *AuditLogHandler) List(c *fiber.Ctx) error {
-	logs, err := h.service.List()
+	filter := repositories.AuditFilter{
+		Category: c.Query("category"),
+		Severity: c.Query("severity"),
+		Query:    c.Query("q"),
+		Limit:    c.QueryInt("limit"),
+		Offset:   c.QueryInt("offset"),
+	}
+	logs, err := h.service.List(filter)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to fetch audit logs")
 	}
 	return c.JSON(logs)
-}
-
-// Create stores a manual audit log entry.
-// @Summary Create audit log
-// @Tags audit
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Security OAuth2Password
-// @Param payload body models.AuditLog true "Audit log payload"
-// @Success 201 {object} models.AuditLog
-// @Failure 400 {object} handlers.errorResponse
-// @Failure 401 {object} handlers.errorResponse
-// @Failure 403 {object} handlers.errorResponse
-// @Router /audit-logs [post]
-func (h *AuditLogHandler) Create(c *fiber.Ctx) error {
-	var payload models.AuditLog
-	if err := c.BodyParser(&payload); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid json")
-	}
-	created, err := h.service.Create(payload)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	return c.Status(fiber.StatusCreated).JSON(created)
 }

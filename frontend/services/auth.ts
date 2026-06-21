@@ -20,3 +20,7 @@ export async function signupClient(email: string, password: string, name: string
   const { data } = await api.post<AdminUser>("/auth/signup", { email, password, name });
   return data;
 }
+
+export async function logoutRequest() {
+  await api.post("/auth/logout");
+}

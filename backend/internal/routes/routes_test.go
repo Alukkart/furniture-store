@@ -210,14 +210,17 @@ func TestManagerCanUpdateOrderStatus(t *testing.T) {
 	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
 	orderID := mustFindOrderIDByAddress(t, db, "г. Екатеринбург, ул. Малышева, д. 18, кв. 24")
 
-	resp := performJSONRequest(t, app, http.MethodPatch, "/api/orders/"+orderID+"/status", map[string]any{
-		"status": "shipped",
-	}, map[string]string{
-		"Authorization": "Bearer " + managerToken,
-	})
+	// Заказ проходит жизненный цикл по допустимым переходам: pending → processing → shipped.
+	for _, status := range []string{"processing", "shipped"} {
+		resp := performJSONRequest(t, app, http.MethodPatch, "/api/orders/"+orderID+"/status", map[string]any{
+			"status": status,
+		}, map[string]string{
+			"Authorization": "Bearer " + managerToken,
+		})
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected 200 for manager order update, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 for manager order update to %s, got %d", status, resp.StatusCode)
+		}
 	}
 
 	var order models.Order
@@ -386,6 +389,151 @@ func TestClientCanSignupAndViewOwnOrders(t *testing.T) {
 	}
 	if orders[0].Email != "client@example.com" {
 		t.Fatalf("expected client order email, got %s", orders[0].Email)
+	}
+}
+
+func TestInvalidStatusTransitionRejected(t *testing.T) {
+	app, db := setupTestApp(t)
+	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
+	orderID := mustFindOrderIDByAddress(t, db, "г. Екатеринбург, ул. Малышева, д. 18, кв. 24")
+
+	// Заказ в состоянии pending нельзя перевести сразу в delivered, минуя обработку и отгрузку.
+	resp := performJSONRequest(t, app, http.MethodPatch, "/api/orders/"+orderID+"/status", map[string]any{
+		"status": "delivered",
+	}, map[string]string{
+		"Authorization": "Bearer " + managerToken,
+	})
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid transition, got %d", resp.StatusCode)
+	}
+}
+
+func TestCancelOrderRestoresStock(t *testing.T) {
+	app, db := setupTestApp(t)
+	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
+	productID := mustFindProductIDBySKU(t, db, "SOF-HVNS-BEI")
+
+	orderResp := performJSONRequest(t, app, http.MethodPost, "/api/orders", map[string]any{
+		"customer": "Stock Test",
+		"email":    "stock@example.com",
+		"address":  "Stock Street",
+		"items": []map[string]any{
+			{
+				"product":  map[string]any{"id": productID},
+				"quantity": 2,
+			},
+		},
+	}, nil)
+	if orderResp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected 201 order, got %d", orderResp.StatusCode)
+	}
+	var created models.OrderResponse
+	if err := json.NewDecoder(orderResp.Body).Decode(&created); err != nil {
+		t.Fatalf("decode order: %v", err)
+	}
+
+	var product models.Product
+	if err := db.First(&product, "id = ?", productID).Error; err != nil {
+		t.Fatalf("fetch product: %v", err)
+	}
+	if product.StockQty != 10 {
+		t.Fatalf("expected stock 10 after order, got %d", product.StockQty)
+	}
+
+	cancelResp := performJSONRequest(t, app, http.MethodPatch, "/api/orders/"+created.ID+"/status", map[string]any{
+		"status": "cancelled",
+	}, map[string]string{
+		"Authorization": "Bearer " + managerToken,
+	})
+	if cancelResp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 for cancellation, got %d", cancelResp.StatusCode)
+	}
+
+	if err := db.First(&product, "id = ?", productID).Error; err != nil {
+		t.Fatalf("fetch product: %v", err)
+	}
+	if product.StockQty != 12 {
+		t.Fatalf("expected stock restored to 12 after cancellation, got %d", product.StockQty)
+	}
+}
+
+func TestClientCannotViewForeignOrder(t *testing.T) {
+	app, db := setupTestApp(t)
+	foreignOrderID := mustFindOrderIDByAddress(t, db, "г. Екатеринбург, ул. Малышева, д. 18, кв. 24")
+
+	signupResp := performJSONRequest(t, app, http.MethodPost, "/api/auth/signup", map[string]string{
+		"email":    "stranger@example.com",
+		"password": "stranger123",
+		"name":     "Stranger",
+	}, nil)
+	if signupResp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected 201 signup, got %d", signupResp.StatusCode)
+	}
+	clientToken := loginAndGetToken(t, app, "stranger@example.com", "stranger123")
+
+	resp := performJSONRequest(t, app, http.MethodGet, "/api/orders/"+foreignOrderID, nil, map[string]string{
+		"Authorization": "Bearer " + clientToken,
+	})
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected 403 for foreign order, got %d", resp.StatusCode)
+	}
+
+	managerToken := loginAndGetToken(t, app, "manager@maison.co", "manager123")
+	staffResp := performJSONRequest(t, app, http.MethodGet, "/api/orders/"+foreignOrderID, nil, map[string]string{
+		"Authorization": "Bearer " + managerToken,
+	})
+	if staffResp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 for staff order view, got %d", staffResp.StatusCode)
+	}
+}
+
+func TestBlockedUserTokenRejected(t *testing.T) {
+	app, db := setupTestApp(t)
+	warehouseToken := loginAndGetToken(t, app, "warehouse@maison.co", "warehouse123")
+	adminToken := loginAndGetToken(t, app, "admin@maison.co", "admin123")
+	userID := mustFindUserIDByEmail(t, db, "warehouse@maison.co")
+
+	blockResp := performJSONRequest(t, app, http.MethodPatch, "/api/users/"+userID+"/block", map[string]any{
+		"is_blocked": true,
+	}, map[string]string{
+		"Authorization": "Bearer " + adminToken,
+	})
+	if blockResp.StatusCode != http.StatusOK && blockResp.StatusCode != http.StatusNoContent {
+		t.Fatalf("expected success for block, got %d", blockResp.StatusCode)
+	}
+
+	// Действующий токен заблокированного пользователя отклоняется при первом же запросе.
+	resp := performJSONRequest(t, app, http.MethodGet, "/api/orders", nil, map[string]string{
+		"Authorization": "Bearer " + warehouseToken,
+	})
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected 403 for blocked user, got %d", resp.StatusCode)
+	}
+}
+
+func TestProductsFilterByCategoryAndPrice(t *testing.T) {
+	app, _ := setupTestApp(t)
+
+	resp := performJSONRequest(t, app, http.MethodGet, "/api/products?category=%D0%93%D0%BE%D1%81%D1%82%D0%B8%D0%BD%D0%B0%D1%8F&minPrice=20000", nil, nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	var products []models.Product
+	if err := json.NewDecoder(resp.Body).Decode(&products); err != nil {
+		t.Fatalf("decode products: %v", err)
+	}
+	if len(products) == 0 {
+		t.Fatalf("expected filtered products, got empty list")
+	}
+	for _, product := range products {
+		if product.Category != "Гостиная" {
+			t.Fatalf("expected category Гостиная, got %s", product.Category)
+		}
+		if product.Price < 20000 {
+			t.Fatalf("expected price >= 20000, got %d", product.Price)
+		}
 	}
 }
 

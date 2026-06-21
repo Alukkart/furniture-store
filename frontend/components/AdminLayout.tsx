@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const { currentUser, logout } = useAuth();
-  const addAuditLog = useStore((s) => s.addAuditLog);
+  const recordLogout = useStore((s) => s.recordLogout);
   const locale = usePreferences((s) => s.locale);
   const t = adminText[locale].layout;
 
@@ -60,15 +60,8 @@ export default function AdminLayout({ children }: Props) {
 
   if (!currentUser) return null;
 
-  function handleLogout() {
-    addAuditLog({
-      action: "User Logout",
-      category: "user",
-      user: currentUser.email,
-      details: `${currentUser.name} (${currentUser.email}) signed out`,
-      severity: "info",
-      result: "ok",
-    });
+  async function handleLogout() {
+    await recordLogout();
     logout();
     router.push("/login");
   }

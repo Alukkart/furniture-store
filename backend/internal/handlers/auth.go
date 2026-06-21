@@ -185,6 +185,24 @@ func (h *AuthHandler) Me(c *fiber.Ctx) error {
 	return c.JSON(models.AdminUser{ID: claims.UserID, Email: claims.Email, Role: claims.Role, Name: claims.Email})
 }
 
+// Logout records a server-side audit entry for the current user sign-out.
+// @Summary Logout
+// @Tags auth
+// @Produce json
+// @Security BearerAuth
+// @Security OAuth2Password
+// @Success 204
+// @Failure 401 {object} handlers.errorResponse
+// @Router /auth/logout [post]
+func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	claims, ok := middleware.ClaimsFromCtx(c)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	_ = h.createAudit("User Logout", models.AuditCategoryUser, claims.Email, "User signed out", models.AuditSeverityInfo, "user", claims.UserID, "ok")
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
 func (h *AuthHandler) createAudit(action string, category models.AuditCategory, user, details string, severity models.AuditSeverity, entity, entityID, result string) error {
 	_, err := h.auditService.Create(models.AuditLog{Action: action, Category: category, User: user, Details: details, Severity: severity, Entity: entity, EntityID: entityID, Result: result})
 	return err

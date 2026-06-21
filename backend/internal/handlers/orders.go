@@ -91,6 +91,38 @@ func (h *OrderHandler) ListMine(c *fiber.Ctx) error {
 	return c.JSON(orders)
 }
 
+// Get returns a single order by ID.
+// @Summary Get order
+// @Tags orders
+// @Produce json
+// @Security BearerAuth
+// @Security OAuth2Password
+// @Param id path string true "Order ID"
+// @Success 200 {object} models.OrderResponse
+// @Failure 401 {object} handlers.errorResponse
+// @Failure 403 {object} handlers.errorResponse
+// @Failure 404 {object} handlers.errorResponse
+// @Router /orders/{id} [get]
+func (h *OrderHandler) Get(c *fiber.Ctx) error {
+	id := strings.TrimSpace(c.Params("id"))
+	order, err := h.service.Get(id)
+	if err != nil {
+		if services.IsNotFound(err) {
+			return fiber.NewError(fiber.StatusNotFound, "order not found")
+		}
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	claims, ok := middleware.ClaimsFromCtx(c)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	if claims.Role == models.RoleClient && !strings.EqualFold(order.Email, claims.Email) {
+		return fiber.NewError(fiber.StatusForbidden, "access to this order is denied")
+	}
+	return c.JSON(order)
+}
+
 // Create places a new order.
 // @Summary Create order
 // @Tags orders

@@ -39,8 +39,9 @@ func Register(app *fiber.App, db *gorm.DB, appSecret string) {
 	refHandler := handlers.NewReferenceHandler(db)
 	api.Get("/categories", refHandler.ListCategories)
 
-	authenticated := api.Group("", middleware.RequireAuth(appSecret))
+	authenticated := api.Group("", middleware.RequireAuth(appSecret), middleware.RequireActiveUser(db))
 	authenticated.Get("/auth/me", authHandler.Me)
+	authenticated.Post("/auth/logout", authHandler.Logout)
 	authenticated.Post("/auth/register", middleware.RequireRoles(models.RoleAdmin), authHandler.Register)
 
 	authenticated.Post("/products", middleware.RequireRoles(models.RoleAdmin, models.RoleManager), productHandler.Create)
@@ -49,12 +50,12 @@ func Register(app *fiber.App, db *gorm.DB, appSecret string) {
 
 	authenticated.Get("/orders", middleware.RequireRoles(models.RoleAdmin, models.RoleManager, models.RoleWarehouse, models.RoleExecutive), orderHandler.List)
 	authenticated.Get("/orders/my", middleware.RequireRoles(models.RoleClient), orderHandler.ListMine)
+	authenticated.Get("/orders/:id", middleware.RequireRoles(models.RoleAdmin, models.RoleManager, models.RoleWarehouse, models.RoleExecutive, models.RoleClient), orderHandler.Get)
 	authenticated.Put("/orders/:id", middleware.RequireRoles(models.RoleAdmin, models.RoleManager, models.RoleWarehouse), orderHandler.Update)
 	authenticated.Patch("/orders/:id/status", middleware.RequireRoles(models.RoleAdmin, models.RoleManager, models.RoleWarehouse), orderHandler.UpdateStatus)
 
 	auditLogHandler := handlers.NewAuditLogHandler(db)
 	authenticated.Get("/audit-logs", middleware.RequireRoles(models.RoleAdmin, models.RoleManager, models.RoleWarehouse, models.RoleExecutive), auditLogHandler.List)
-	authenticated.Post("/audit-logs", middleware.RequireRoles(models.RoleAdmin, models.RoleManager), auditLogHandler.Create)
 
 	userHandler := handlers.NewUserHandler(db, appSecret)
 	authenticated.Get("/users", middleware.RequireRoles(models.RoleAdmin), userHandler.List)

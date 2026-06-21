@@ -1,8 +1,10 @@
 package repositories
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
+	"time"
 
 	"backend/internal/models"
 
@@ -27,9 +29,45 @@ func NewForecastRepository(db *gorm.DB) *ForecastRepository { return &ForecastRe
 func NewCategoryRepository(db *gorm.DB) *CategoryRepository { return &CategoryRepository{db: db} }
 func NewCustomerRepository(db *gorm.DB) *CustomerRepository { return &CustomerRepository{db: db} }
 
-func (r *ProductRepository) List() ([]models.Product, error) {
+// ProductFilter описывает серверную фильтрацию и постраничную выдачу каталога.
+// Пустой фильтр возвращает полный список, поэтому существующие клиенты не меняются.
+type ProductFilter struct {
+	Category string
+	MinPrice *int64
+	MaxPrice *int64
+	Query    string
+	Limit    int
+	Offset   int
+}
+
+func (r *ProductRepository) List(filter ProductFilter) ([]models.Product, error) {
+	q := r.db.Preload("CategoryRef").Order("created_at asc")
+	if name := strings.TrimSpace(filter.Category); name != "" && !strings.EqualFold(name, "all") {
+		// Сравнение и по точному имени: LOWER() в SQLite не приводит кириллицу.
+		q = q.Where(
+			"category_id IN (?)",
+			r.db.Model(&models.Category{}).Select("id").Where("name = ? OR LOWER(name) = ?", name, strings.ToLower(name)),
+		)
+	}
+	if filter.MinPrice != nil {
+		q = q.Where("price >= ?", *filter.MinPrice)
+	}
+	if filter.MaxPrice != nil {
+		q = q.Where("price <= ?", *filter.MaxPrice)
+	}
+	if search := strings.TrimSpace(filter.Query); search != "" {
+		like := "%" + strings.ToLower(search) + "%"
+		q = q.Where("LOWER(name) LIKE ? OR LOWER(sku) LIKE ?", like, like)
+	}
+	if filter.Limit > 0 {
+		q = q.Limit(filter.Limit)
+	}
+	if filter.Offset > 0 {
+		q = q.Offset(filter.Offset)
+	}
+
 	var products []models.Product
-	err := r.db.Preload("CategoryRef").Order("created_at asc").Find(&products).Error
+	err := q.Find(&products).Error
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +222,47 @@ func (r *OrderRepository) FindOrCreateCustomer(tx *gorm.DB, fullName, email stri
 	return c, nil
 }
 
+// RecordSale пополняет обучающий набор ml_datasets фактом продажи: история
+// агрегируется по категории и месяцу, чтобы прогноз строился на данных,
+// накапливаемых в процессе работы магазина.
+func (r *OrderRepository) RecordSale(tx *gorm.DB, categoryID uint, qty int, price int64) error {
+	now := time.Now().UTC()
+	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	priceBucket := "mid"
+	switch {
+	case price < 500:
+		priceBucket = "low"
+	case price >= 2000:
+		priceBucket = "high"
+	}
+
+	var row models.MLDataset
+	err := tx.Where("dt = ? AND category_id = ?", monthStart, categoryID).First(&row).Error
+	if err == nil {
+		row.SoldQty += qty
+		return tx.Save(&row).Error
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	features, _ := json.Marshal(map[string]any{
+		"month":       int(monthStart.Month()),
+		"category_id": categoryID,
+		"price_level": priceBucket,
+		"source":      "orders",
+	})
+	row = models.MLDataset{
+		DT:           monthStart,
+		CategoryID:   categoryID,
+		PriceBucket:  priceBucket,
+		SoldQty:      qty,
+		FeaturesJSON: string(features),
+	}
+	return tx.Create(&row).Error
+}
+
 func (r *OrderRepository) FindProductForUpdate(tx *gorm.DB, id string) (models.Product, error) {
 	var product models.Product
 	err := tx.Preload("CategoryRef").First(&product, "id = ?", id).Error
@@ -228,9 +307,36 @@ func (r *UserRepository) FindRoleByName(name models.RoleName) (models.Role, erro
 	return role, err
 }
 
-func (r *AuditRepository) List() ([]models.AuditLog, error) {
+// AuditFilter поддерживает поиск, фильтрацию и постраничную выдачу журнала аудита.
+type AuditFilter struct {
+	Category string
+	Severity string
+	Query    string
+	Limit    int
+	Offset   int
+}
+
+func (r *AuditRepository) List(filter AuditFilter) ([]models.AuditLog, error) {
+	q := r.db.Order("timestamp desc")
+	if category := strings.TrimSpace(filter.Category); category != "" {
+		q = q.Where("category = ?", strings.ToLower(category))
+	}
+	if severity := strings.TrimSpace(filter.Severity); severity != "" {
+		q = q.Where("severity = ?", strings.ToLower(severity))
+	}
+	if search := strings.TrimSpace(filter.Query); search != "" {
+		like := "%" + strings.ToLower(search) + "%"
+		q = q.Where("LOWER(action) LIKE ? OR LOWER(details) LIKE ? OR LOWER(user) LIKE ?", like, like, like)
+	}
+	if filter.Limit > 0 {
+		q = q.Limit(filter.Limit)
+	}
+	if filter.Offset > 0 {
+		q = q.Offset(filter.Offset)
+	}
+
 	var logs []models.AuditLog
-	err := r.db.Order("timestamp desc").Find(&logs).Error
+	err := q.Find(&logs).Error
 	return logs, err
 }
 

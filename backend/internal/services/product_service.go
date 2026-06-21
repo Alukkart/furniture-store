@@ -18,8 +18,8 @@ func NewProductService(repo *repositories.ProductRepository) *ProductService {
 	return &ProductService{repo: repo}
 }
 
-func (s *ProductService) List() ([]models.Product, error) {
-	return s.repo.List()
+func (s *ProductService) List(filter repositories.ProductFilter) ([]models.Product, error) {
+	return s.repo.List(filter)
 }
 
 func (s *ProductService) Get(id string) (models.Product, error) {
